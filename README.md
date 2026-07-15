@@ -212,3 +212,19 @@ All source code, documentation, logs, commit messages, and UI strings must remai
 GNU General Public License v3.0 or later, with one additional term under GPLv3 Section 7(b).
 See [LICENSE](LICENSE) for the full license text and [ADDITIONAL_TERMS.md](ADDITIONAL_TERMS.md)
 for the additional term.
+
+---
+
+### ❤️ Support Development
+
+☕ **Buy Me a Coffee**  
+https://buymeacoffee.com/sayehava
+
+💜 **Ko-fi**  
+https://ko-fi.com/sayehava
+
+> [!TIP]
+> Even a small donation helps fund future modules, maintenance, bug fixes, and new features.
+
+---
+
