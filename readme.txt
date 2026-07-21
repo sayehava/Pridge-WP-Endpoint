@@ -3,7 +3,7 @@ Contributors: sayehava
 Tags: printing, woocommerce, endpoint, receipt, pridge
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.5.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -49,6 +49,14 @@ When Shiptastic for WooCommerce is active, each active carrier appears as a sepa
 route. Pridge forwards the original label payload when Shiptastic creates it.
 
 == Changelog ==
+
+= 0.5.0 =
+
+* Self-updating: the plugin now checks github.com/sayehava/Pridge-WP-Endpoint for new
+  releases and appears as updatable on the native Plugins page, using WordPress's own
+  update flow (including its automatic rollback if an update fatals). A full backup of
+  the plugin's files is taken automatically right before an update installs, kept for
+  the last 5 updates, with a one-click restore from the Overview page.
 
 = 0.4.0 =
 

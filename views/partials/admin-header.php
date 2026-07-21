@@ -44,6 +44,12 @@ $notice = isset( $_GET['pb_notice'] ) ? sanitize_key( wp_unslash( $_GET['pb_noti
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Germanized PDF test finished.', 'pridge-wp-endpoint' ); ?></strong> <?php printf( esc_html__( '%1$d PDF jobs accepted and %2$d missing or failed.', 'pridge-wp-endpoint' ), isset( $_GET['sent_count'] ) ? absint( $_GET['sent_count'] ) : 0, isset( $_GET['failed_count'] ) ? absint( $_GET['failed_count'] ) : 0 ); ?></div>
 	<?php elseif ( 'germanized-test-error' === $notice ) : ?>
 		<div class="pridge-message is-error" role="alert"><strong><?php esc_html_e( 'Germanized PDF test did not send a job.', 'pridge-wp-endpoint' ); ?></strong> <?php printf( esc_html__( 'Error: %s', 'pridge-wp-endpoint' ), esc_html( isset( $_GET['error_code'] ) ? sanitize_key( wp_unslash( $_GET['error_code'] ) ) : 'unknown' ) ); ?></div>
+	<?php elseif ( 'restore-success' === $notice ) : ?>
+		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Backup restored.', 'pridge-wp-endpoint' ); ?></strong></div>
+	<?php elseif ( 'restore-error' === $notice ) : ?>
+		<div class="pridge-message is-error" role="alert"><strong><?php esc_html_e( 'Could not restore that backup. Check the site error log for details.', 'pridge-wp-endpoint' ); ?></strong></div>
+	<?php elseif ( 'check-updates-done' === $notice ) : ?>
+		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Checked for updates.', 'pridge-wp-endpoint' ); ?></strong> <?php esc_html_e( 'See the Plugins page for the result.', 'pridge-wp-endpoint' ); ?></div>
 	<?php elseif ( isset( $_GET['settings-updated'] ) ) : ?>
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Settings saved.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php endif; ?>

@@ -22,6 +22,7 @@ desktop client that pulls jobs and talks to physical printers are separate appli
 - Binary-safe archive of successful and failed attempts with protected payload previews.
 - Scoped dark-neon administration with accessible modals and reduced-motion support.
 - Third-party plugin notices suppressed only on Pridge administration pages.
+- Self-updating from GitHub releases through WordPress's native Plugins page, with an automatic backup before every update and one-click restore.
 
 Version `0.3.0` uses existing Germanized Pro and Shiptastic PDF files for routed invoice,
 packing-slip, and shipping-label jobs.

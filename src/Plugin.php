@@ -118,6 +118,10 @@ final class Plugin {
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 		$this->integrations->register();
 
+		if ( is_admin() || wp_doing_cron() ) {
+			UpdateChecker::register();
+		}
+
 		if ( null !== $this->admin ) {
 			$this->admin->register();
 		}

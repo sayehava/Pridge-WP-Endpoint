@@ -25,4 +25,56 @@ require PRIDGE_WP_DIR . 'views/partials/admin-header.php';
 	<div class="pridge-save-bar"><div><strong><?php esc_html_e( 'Server configuration', 'pridge-wp-endpoint' ); ?></strong><span><?php esc_html_e( 'Tokens are managed separately under Endpoints & Routing.', 'pridge-wp-endpoint' ); ?></span></div><?php submit_button( __( 'Save settings', 'pridge-wp-endpoint' ), 'primary pridge-button is-primary', 'submit', false ); ?></div>
 </form>
 <div class="pridge-modal" id="pridge-test-modal" role="dialog" aria-modal="true" aria-labelledby="pridge-test-title" hidden><div class="pridge-modal-backdrop" data-pridge-modal-close></div><div class="pridge-modal-card" role="document"><button class="pridge-modal-close" type="button" aria-label="<?php esc_attr_e( 'Close', 'pridge-wp-endpoint' ); ?>" data-pridge-modal-close>&times;</button><span class="pridge-kicker"><?php esc_html_e( 'Live endpoint check', 'pridge-wp-endpoint' ); ?></span><h2 id="pridge-test-title"><?php esc_html_e( 'Send a test print?', 'pridge-wp-endpoint' ); ?></h2><p><?php esc_html_e( 'This creates a real job on the default endpoint.', 'pridge-wp-endpoint' ); ?></p><form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post"><input type="hidden" name="action" value="pridge_wp_test_print"><?php wp_nonce_field( 'pridge_wp_test_print' ); ?><div class="pridge-modal-actions"><button class="button pridge-button is-secondary" type="button" data-pridge-modal-close><?php esc_html_e( 'Cancel', 'pridge-wp-endpoint' ); ?></button><button class="button pridge-button is-primary" type="submit"><?php esc_html_e( 'Send test job', 'pridge-wp-endpoint' ); ?></button></div></form></div></div>
+<section class="pridge-panel">
+	<div class="pridge-panel-heading">
+		<div>
+			<span class="pridge-kicker"><?php esc_html_e( 'Self-update', 'pridge-wp-endpoint' ); ?></span>
+			<h2><?php esc_html_e( 'Updates &amp; backups', 'pridge-wp-endpoint' ); ?></h2>
+			<p>
+				<?php
+				printf(
+					/* translators: %s: opening and closing <a> tags linking to the Plugins page. */
+					esc_html__( 'Updates for Pridge WP Endpoint appear on the %1$sPlugins page%2$s like any other plugin, using WordPress\'s own update flow. A backup is taken automatically right before an update installs.', 'pridge-wp-endpoint' ),
+					'<a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">',
+					'</a>'
+				);
+				?>
+			</p>
+		</div>
+		<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+			<input type="hidden" name="action" value="pridge_wp_check_updates">
+			<?php wp_nonce_field( 'pridge_wp_check_updates' ); ?>
+			<button class="button pridge-button is-secondary" type="submit"><?php esc_html_e( 'Check for updates now', 'pridge-wp-endpoint' ); ?></button>
+		</form>
+	</div>
+	<?php if ( empty( $backups ) ) : ?>
+		<p><?php esc_html_e( 'No backups yet. One is created automatically the first time an update installs.', 'pridge-wp-endpoint' ); ?></p>
+	<?php else : ?>
+		<table class="widefat striped">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Created', 'pridge-wp-endpoint' ); ?></th>
+					<th><?php esc_html_e( 'Size', 'pridge-wp-endpoint' ); ?></th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $backups as $backup ) : ?>
+					<tr>
+						<td><?php echo esc_html( $backup['created_at'] ); ?> UTC</td>
+						<td><?php echo esc_html( number_format_i18n( $backup['size'] / 1048576, 1 ) ); ?> MB</td>
+						<td>
+							<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" onsubmit="return confirm('<?php echo esc_js( __( 'This replaces the current plugin files with this backup. Continue?', 'pridge-wp-endpoint' ) ); ?>');">
+								<input type="hidden" name="action" value="pridge_wp_restore_backup">
+								<input type="hidden" name="backup" value="<?php echo esc_attr( $backup['name'] ); ?>">
+								<?php wp_nonce_field( 'pridge_wp_restore_backup' ); ?>
+								<button class="button pridge-button is-secondary" type="submit"><?php esc_html_e( 'Restore this backup', 'pridge-wp-endpoint' ); ?></button>
+							</form>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+	<?php endif; ?>
+</section>
 <?php require PRIDGE_WP_DIR . 'views/partials/admin-footer.php'; ?>

@@ -14,6 +14,8 @@ use Pridge\Integration\GermanizedDocuments;
 use Pridge\IntegrationSettings;
 use Pridge\JobService;
 use Pridge\Settings;
+use Pridge\UpdateChecker;
+use RuntimeException;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -66,6 +68,8 @@ final class Admin {
 		add_action( 'admin_post_pridge_wp_test_print', array( $this, 'handle_test_print' ) );
 		add_action( 'admin_post_pridge_wp_test_germanized_order', array( $this, 'handle_germanized_test_print' ) );
 		add_action( 'admin_post_pridge_wp_archive_payload', array( $this, 'handle_archive_payload' ) );
+		add_action( 'admin_post_pridge_wp_restore_backup', array( $this, 'handle_restore_backup' ) );
+		add_action( 'admin_post_pridge_wp_check_updates', array( $this, 'handle_check_updates' ) );
 		add_action( 'wp_ajax_pridge_wp_archive_detail', array( $this, 'handle_archive_detail' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( PRIDGE_WP_FILE ), array( $this, 'add_plugin_action_link' ) );
 
@@ -208,6 +212,7 @@ final class Admin {
 		$settings      = $this->settings->all();
 		$endpoints     = $this->endpoints->fetch_all();
 		$archive_count = $this->archive->count();
+		$backups       = UpdateChecker::list_backups();
 		require PRIDGE_WP_DIR . 'views/overview.php';
 	}
 
@@ -518,6 +523,51 @@ final class Admin {
 		$types = $this->document_types();
 
 		return $types[ $document_type ] ?? ucwords( str_replace( array( '__', '_' ), array( ' — ', ' ' ), $document_type ) );
+	}
+
+	/**
+	 * @return void
+	 */
+	public function handle_restore_backup() {
+		$this->authorize();
+		check_admin_referer( 'pridge_wp_restore_backup' );
+
+		$requested = isset( $_POST['backup'] ) ? sanitize_file_name( wp_unslash( $_POST['backup'] ) ) : '';
+		$path      = UpdateChecker::backups_dir() . '/' . $requested;
+
+		$args = array( 'page' => self::PAGE_OVERVIEW );
+
+		try {
+			UpdateChecker::restore_backup( $path );
+			$args['pb_notice'] = 'restore-success';
+		} catch ( RuntimeException $exception ) {
+			error_log( 'Pridge WP Endpoint: backup restore failed: ' . $exception->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			$args['pb_notice'] = 'restore-error';
+		}
+
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	/**
+	 * @return void
+	 */
+	public function handle_check_updates() {
+		$this->authorize();
+		check_admin_referer( 'pridge_wp_check_updates' );
+
+		UpdateChecker::force_check();
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'      => self::PAGE_OVERVIEW,
+					'pb_notice' => 'check-updates-done',
+				),
+				admin_url( 'admin.php' )
+			)
+		);
+		exit;
 	}
 
 	/**
