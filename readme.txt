@@ -52,11 +52,17 @@ route. Pridge forwards the original label payload when Shiptastic creates it.
 
 = 0.5.0 =
 
-* Self-updating: the plugin now checks github.com/sayehava/Pridge-WP-Endpoint for new
-  releases and appears as updatable on the native Plugins page, using WordPress's own
-  update flow (including its automatic rollback if an update fatals). A full backup of
-  the plugin's files is taken automatically right before an update installs, kept for
-  the last 5 updates, with a one-click restore from the Overview page.
+* Self-updating: the plugin checks github.com/sayehava/Pridge-WP-Endpoint for new releases
+  (every 12 hours, or on demand from the Overview page's "Check for updates now" button)
+  and appears as updatable on the native Plugins page, exactly like a WordPress.org-hosted
+  plugin - same "Update Now" link, same version-details popup with release notes, same
+  automatic rollback WordPress core performs if an update causes a fatal error.
+* A full zip backup of the plugin's files is taken automatically immediately before
+  WordPress installs an update - if the backup fails for any reason (e.g. the zip PHP
+  extension is missing), the update itself is stopped rather than proceeding without one.
+  Backups are stored under wp-content/uploads/pridge-wp-endpoint-backups/ (protected by
+  .htaccess and an index.php placeholder against direct web access), with the last 5 kept
+  automatically and a one-click "Restore this backup" button on the Overview page.
 
 = 0.4.0 =
 
