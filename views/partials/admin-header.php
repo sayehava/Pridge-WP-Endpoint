@@ -47,3 +47,7 @@ $notice = isset( $_GET['pb_notice'] ) ? sanitize_key( wp_unslash( $_GET['pb_noti
 	<?php elseif ( isset( $_GET['settings-updated'] ) ) : ?>
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Settings saved.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php endif; ?>
+	<?php $compatibility_warning = get_option( \Pridge\JobService::COMPATIBILITY_WARNING_OPTION, '' ); ?>
+	<?php if ( $compatibility_warning ) : ?>
+		<div class="pridge-message is-warning" role="status"><strong><?php esc_html_e( 'Version mismatch:', 'pridge-wp-endpoint' ); ?></strong> <?php echo esc_html( $compatibility_warning ); ?></div>
+	<?php endif; ?>

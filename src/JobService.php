@@ -12,6 +12,12 @@ use Pridge\Http\Client;
 defined( 'ABSPATH' ) || exit;
 
 final class JobService {
+	/**
+	 * WordPress option holding the most recent server compatibility warning, if any.
+	 * Cleared as soon as a submission reports the client and server are compatible.
+	 */
+	public const COMPATIBILITY_WARNING_OPTION = 'pridge_wp_compatibility_warning';
+
 	/** @var Settings */
 	private $settings;
 
@@ -146,6 +152,12 @@ final class JobService {
 			$result['archive_id']    = $archive_id;
 			$result['endpoint_id']   = $endpoint['id'];
 			$result['endpoint_name'] = $endpoint['name'];
+
+			if ( ! empty( $result['compatibility_warning'] ) ) {
+				update_option( self::COMPATIBILITY_WARNING_OPTION, $result['compatibility_warning'] );
+			} else {
+				delete_option( self::COMPATIBILITY_WARNING_OPTION );
+			}
 		}
 
 		/**

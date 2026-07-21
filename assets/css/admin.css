@@ -272,6 +272,14 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, 
 	color: var(--persian-red);
 }
 
+.pridge-message.is-warning {
+	border-color: rgba(255, 179, 0, 0.4);
+}
+
+.pridge-message.is-warning strong {
+	color: var(--amber);
+}
+
 .pridge-status-grid {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));

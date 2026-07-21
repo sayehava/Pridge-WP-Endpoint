@@ -54,9 +54,10 @@ final class Client {
 		}
 
 		$headers = array(
-			'Accept'        => 'application/json',
-			'Authorization' => 'Bearer ' . $token,
-			'Content-Type'  => $content_type,
+			'Accept'                  => 'application/json',
+			'Authorization'           => 'Bearer ' . $token,
+			'Content-Type'            => $content_type,
+			'X-Pridge-Module-Version' => PRIDGE_WP_VERSION,
 		);
 
 		if ( array() !== $metadata ) {
@@ -108,8 +109,10 @@ final class Client {
 		}
 
 		return array(
-			'job_id' => (int) $decoded['job_id'],
-			'status' => isset( $decoded['status'] ) ? sanitize_key( (string) $decoded['status'] ) : 'pending',
+			'job_id'                => (int) $decoded['job_id'],
+			'status'                => isset( $decoded['status'] ) ? sanitize_key( (string) $decoded['status'] ) : 'pending',
+			'server_version'        => isset( $decoded['server_version'] ) ? sanitize_text_field( (string) $decoded['server_version'] ) : '',
+			'compatibility_warning' => isset( $decoded['compatibility_warning'] ) ? sanitize_text_field( (string) $decoded['compatibility_warning'] ) : '',
 		);
 	}
 
