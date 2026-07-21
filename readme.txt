@@ -3,7 +3,7 @@ Contributors: sayehava
 Tags: printing, woocommerce, endpoint, receipt, pridge
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -49,6 +49,14 @@ When Shiptastic for WooCommerce is active, each active carrier appears as a sepa
 route. Pridge forwards the original label payload when Shiptastic creates it.
 
 == Changelog ==
+
+= 0.5.1 =
+
+* Fixed: the Updates & Backups section added in 0.5.0 sat outside the page's layout
+  container and was missing the fade-in class every other panel uses, so it didn't line up
+  with the rest of the Overview page and used a plain WordPress table style instead of this
+  plugin's own dark theme. Backups now render with the same table styling as the Print
+  Archive page.
 
 = 0.5.0 =
 
