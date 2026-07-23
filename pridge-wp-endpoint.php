@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Pridge WP Endpoint
  * Description:       Connects WordPress and WooCommerce to Pridge Server print endpoints.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Pridge
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PRIDGE_WP_VERSION', '1.0.2' );
+define( 'PRIDGE_WP_VERSION', '1.0.3' );
 define( 'PRIDGE_WP_FILE', __FILE__ );
 define( 'PRIDGE_WP_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PRIDGE_WP_URL', plugin_dir_url( __FILE__ ) );

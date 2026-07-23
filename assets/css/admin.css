@@ -512,6 +512,7 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pri
 .pridge-admin input[type="url"],
 .pridge-admin input[type="text"],
 .pridge-admin input[type="password"],
+.pridge-admin input[type="number"],
 .pridge-admin select {
 	width: 100%;
 	min-height: 48px;

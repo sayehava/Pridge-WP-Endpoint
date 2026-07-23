@@ -3,7 +3,7 @@ Contributors: sayehava
 Tags: printing, woocommerce, endpoint, receipt, pridge
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -50,6 +50,12 @@ route. Pridge forwards the original label payload when Shiptastic creates it.
 
 == Changelog ==
 
+= 1.0.3 =
+
+* Fixed: the "Give up waiting after (hours)" number field on Settings, Integrations had
+  no dark styling at all - it was missing from the input types this plugin themes, so it
+  rendered as a plain white browser-default field.
+
 = 1.0.2 =
 
 * Fixed: the Settings page's General/Integrations/Endpoints & Routing sub-tabs always
@@ -60,6 +66,9 @@ route. Pridge forwards the original label payload when Shiptastic creates it.
   Backups) had no spacing between them and sat flush against each other.
 * Strengthened the dropdown hover-readability fix from 1.0.1 with higher-priority rules,
   for cases the first pass did not fully cover.
+* Fixed: WordPress core's own .wp-core-ui select:hover rule sets a near-black text color,
+  which nothing in this plugin's hover style overrode - so hovering a dropdown left dark
+  text on the dark background and made it unreadable.
 
 = 1.0.1 =
 
