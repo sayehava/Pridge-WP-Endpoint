@@ -47,6 +47,10 @@ $notice = isset( $_GET['pb_notice'] ) ? sanitize_key( wp_unslash( $_GET['pb_noti
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Backup restored.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php elseif ( 'restore-error' === $notice ) : ?>
 		<div class="pridge-message is-error" role="alert"><strong><?php esc_html_e( 'Could not restore that backup. Check the site error log for details.', 'pridge-wp-endpoint' ); ?></strong></div>
+	<?php elseif ( 'backup-delete-success' === $notice ) : ?>
+		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Backup deleted.', 'pridge-wp-endpoint' ); ?></strong></div>
+	<?php elseif ( 'backup-delete-error' === $notice ) : ?>
+		<div class="pridge-message is-error" role="alert"><strong><?php esc_html_e( 'Could not delete that backup. Check the site error log for details.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php elseif ( 'backup-now-success' === $notice ) : ?>
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Backup created.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php elseif ( 'backup-now-error' === $notice ) : ?>

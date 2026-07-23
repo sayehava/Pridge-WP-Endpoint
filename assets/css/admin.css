@@ -1,17 +1,18 @@
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, .pridge_page_pridge-wp-endpoints, .pridge_page_pridge-wp-archive) #wpcontent {
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpcontent {
 	padding-left: 0;
 	background: #05060c;
 }
 
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, .pridge_page_pridge-wp-endpoints, .pridge_page_pridge-wp-archive) #wpbody-content {
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpbody-content {
 	padding-bottom: 0;
 }
 
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, .pridge_page_pridge-wp-endpoints, .pridge_page_pridge-wp-archive) #wpfooter {
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpfooter {
 	display: none;
 }
 
 .pridge-admin {
+	color-scheme: dark;
 	--bg: #05060c;
 	--panel: rgba(17, 20, 32, 0.82);
 	--panel-strong: rgba(17, 20, 32, 0.96);
@@ -704,6 +705,11 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, 
 	appearance: none;
 }
 
+.pridge-admin option {
+	color: var(--text);
+	background-color: #0c1021;
+}
+
 .pridge-admin input:hover,
 .pridge-admin select:hover,
 .pridge-admin input:focus,
@@ -1134,8 +1140,8 @@ body.pridge-modal-active {
 	overflow: hidden;
 }
 
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, .pridge_page_pridge-wp-endpoints, .pridge_page_pridge-wp-archive) > .notice,
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, .pridge_page_pridge-wp-endpoints, .pridge_page_pridge-wp-archive) #wpbody-content > .notice {
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) > .notice,
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpbody-content > .notice {
 	width: min(1180px, calc(100% - 80px));
 	margin: 18px auto 0;
 	border-color: rgba(34, 211, 238, 0.42);
@@ -1164,7 +1170,7 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, 
 }
 
 @media (max-width: 782px) {
-	body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, .pridge_page_pridge-wp-endpoints, .pridge_page_pridge-wp-archive) #wpcontent {
+	body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpcontent {
 		padding-left: 0;
 	}
 

@@ -77,6 +77,7 @@ final class Admin {
 		add_action( 'admin_post_pridge_wp_test_germanized_order', array( $this, 'handle_germanized_test_print' ) );
 		add_action( 'admin_post_pridge_wp_archive_payload', array( $this, 'handle_archive_payload' ) );
 		add_action( 'admin_post_pridge_wp_restore_backup', array( $this, 'handle_restore_backup' ) );
+		add_action( 'admin_post_pridge_wp_delete_backup', array( $this, 'handle_delete_backup' ) );
 		add_action( 'admin_post_pridge_wp_backup_now', array( $this, 'handle_backup_now' ) );
 		add_action( 'admin_post_pridge_wp_run_cron_check', array( $this, 'handle_run_cron_check' ) );
 		add_action( 'admin_post_pridge_wp_send_pending_order', array( $this, 'handle_send_pending_order' ) );
@@ -608,6 +609,30 @@ final class Admin {
 		} catch ( RuntimeException $exception ) {
 			error_log( 'Pridge WP Endpoint: backup restore failed: ' . $exception->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			$args['pb_notice'] = 'restore-error';
+		}
+
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	/**
+	 * @return void
+	 */
+	public function handle_delete_backup() {
+		$this->authorize();
+		check_admin_referer( 'pridge_wp_delete_backup' );
+
+		$requested = isset( $_POST['backup'] ) ? sanitize_file_name( wp_unslash( $_POST['backup'] ) ) : '';
+		$path      = UpdateChecker::backups_dir() . '/' . $requested;
+
+		$args = array( 'page' => self::PAGE_OVERVIEW );
+
+		try {
+			UpdateChecker::delete_backup( $path );
+			$args['pb_notice'] = 'backup-delete-success';
+		} catch ( RuntimeException $exception ) {
+			error_log( 'Pridge WP Endpoint: backup deletion failed: ' . $exception->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			$args['pb_notice'] = 'backup-delete-error';
 		}
 
 		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );

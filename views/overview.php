@@ -175,12 +175,20 @@ require PRIDGE_WP_DIR . 'views/partials/admin-header.php';
 								<td data-label="<?php esc_attr_e( 'Created', 'pridge-wp-endpoint' ); ?>"><?php echo esc_html( $backup['created_at'] ); ?> UTC</td>
 								<td data-label="<?php esc_attr_e( 'Size', 'pridge-wp-endpoint' ); ?>"><?php echo esc_html( number_format_i18n( $backup['size'] / 1048576, 1 ) ); ?> MB</td>
 								<td>
-									<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" onsubmit="return confirm('<?php echo esc_js( __( 'This replaces the current plugin files with this backup. Continue?', 'pridge-wp-endpoint' ) ); ?>');">
-										<input type="hidden" name="action" value="pridge_wp_restore_backup">
-										<input type="hidden" name="backup" value="<?php echo esc_attr( $backup['name'] ); ?>">
-										<?php wp_nonce_field( 'pridge_wp_restore_backup' ); ?>
-										<button class="button pridge-button is-secondary" type="submit"><?php esc_html_e( 'Restore this backup', 'pridge-wp-endpoint' ); ?></button>
-									</form>
+									<div class="pridge-button-row">
+										<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" onsubmit="return confirm('<?php echo esc_js( __( 'This replaces the current plugin files with this backup. Continue?', 'pridge-wp-endpoint' ) ); ?>');">
+											<input type="hidden" name="action" value="pridge_wp_restore_backup">
+											<input type="hidden" name="backup" value="<?php echo esc_attr( $backup['name'] ); ?>">
+											<?php wp_nonce_field( 'pridge_wp_restore_backup' ); ?>
+											<button class="button pridge-button is-secondary" type="submit"><?php esc_html_e( 'Restore this backup', 'pridge-wp-endpoint' ); ?></button>
+										</form>
+										<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" onsubmit="return confirm('<?php echo esc_js( __( 'Delete this backup permanently? This cannot be undone.', 'pridge-wp-endpoint' ) ); ?>');">
+											<input type="hidden" name="action" value="pridge_wp_delete_backup">
+											<input type="hidden" name="backup" value="<?php echo esc_attr( $backup['name'] ); ?>">
+											<?php wp_nonce_field( 'pridge_wp_delete_backup' ); ?>
+											<button class="button pridge-button is-secondary" type="submit"><?php esc_html_e( 'Delete', 'pridge-wp-endpoint' ); ?></button>
+										</form>
+									</div>
 								</td>
 							</tr>
 						<?php endforeach; ?>

@@ -331,6 +331,31 @@ final class UpdateChecker {
 	}
 
 	/**
+	 * Delete one backup created by create_backup(). $backup_path must be a file inside
+	 * backups_dir(); anything else is rejected.
+	 *
+	 * @param string $backup_path Absolute path to the backup zip.
+	 * @return void
+	 */
+	public static function delete_backup( $backup_path ) {
+		$backups_dir = realpath( self::backups_dir() );
+		$real_path   = realpath( $backup_path );
+
+		if ( false === $backups_dir || false === $real_path || 0 !== strpos( $real_path, $backups_dir . DIRECTORY_SEPARATOR ) ) {
+			throw new RuntimeException( __( 'Invalid backup file.', 'pridge-wp-endpoint' ) );
+		}
+
+		if ( ! @unlink( $real_path ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.WP.AlternativeFunctions.file_system_operations_unlink
+			throw new RuntimeException( __( 'Could not delete the backup file.', 'pridge-wp-endpoint' ) );
+		}
+
+		$current = get_option( self::BACKUP_OPTION );
+		if ( is_array( $current ) && ( $current['path'] ?? '' ) === $real_path ) {
+			delete_option( self::BACKUP_OPTION );
+		}
+	}
+
+	/**
 	 * @param ZipArchive $zip         Open archive to add to.
 	 * @param string     $source_root Root directory backups are relative to.
 	 * @param string     $current_dir Directory currently being walked.
