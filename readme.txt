@@ -3,7 +3,7 @@ Contributors: sayehava
 Tags: printing, woocommerce, endpoint, receipt, pridge
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 0.5.1
+Stable tag: 1.0.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -49,6 +49,31 @@ When Shiptastic for WooCommerce is active, each active carrier appears as a sepa
 route. Pridge forwards the original label payload when Shiptastic creates it.
 
 == Changelog ==
+
+= 1.0.0 =
+
+* Use the bundled icon on the Plugins and Update screens (the admin menu keeps WordPress's
+  own printer icon).
+* Fixed self-updating: GitHub's release download extracts into a randomly-named folder, and
+  WordPress was installing the update under that name while removing the existing plugin
+  folder - the plugin disappeared instead of being updated. The extracted folder is now
+  renamed to match the plugin's own folder before WordPress installs it.
+* Germanized invoice, packing-slip, and shipping-label PDFs can take time to finish
+  generating after an order event fires and were being sent one at a time as each became
+  available, sometimes printing partial paperwork for an order. Documents are now held
+  until every routed one for an order exists, then sent together. A WP-Cron check (interval
+  configurable under Settings, Integrations) picks up any order that was not immediately
+  ready; an order still missing documents after a configurable timeout is flagged on
+  Overview for a shop manager to send manually instead of waiting indefinitely.
+* Added a live cron health monitor to the Overview page: last and next run, orders
+  currently waiting on documents, a warning if WP-Cron does not appear to be firing, and a
+  manual "Run check now" button. The panel updates itself in place.
+* Added optional automatic status changes after a successful print: a WooCommerce order
+  status and, separately, a Shiptastic shipment status, both configurable under Settings,
+  Integrations.
+* Reorganized the admin area: all configuration now lives on one Settings page with
+  General, Integrations, and Endpoints & Routing sub-tabs. Overview is now a dashboard of
+  connection status, test-print diagnostics, and automation health.
 
 = 0.5.1 =
 
