@@ -386,7 +386,17 @@ final class UpdateChecker {
 		}
 
 		$data = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-		if ( ! is_array( $data ) || empty( $data['tag_name'] ) || empty( $data['zipball_url'] ) ) {
+		if ( ! is_array( $data ) || empty( $data['tag_name'] ) ) {
+			set_transient( self::CHECK_TRANSIENT, array(), HOUR_IN_SECONDS );
+			return null;
+		}
+
+		$zip_url = self::release_asset_zip_url( $data );
+		if ( '' === $zip_url && ! empty( $data['zipball_url'] ) ) {
+			$zip_url = (string) $data['zipball_url'];
+		}
+
+		if ( '' === $zip_url ) {
 			set_transient( self::CHECK_TRANSIENT, array(), HOUR_IN_SECONDS );
 			return null;
 		}
@@ -394,11 +404,35 @@ final class UpdateChecker {
 		$release = array(
 			'version' => ltrim( (string) $data['tag_name'], 'v' ),
 			'notes'   => isset( $data['body'] ) && is_string( $data['body'] ) ? $data['body'] : '',
-			'zip_url' => (string) $data['zipball_url'],
+			'zip_url' => $zip_url,
 		);
 
 		set_transient( self::CHECK_TRANSIENT, $release, self::CHECK_INTERVAL );
 
 		return $release;
+	}
+
+	/**
+	 * The release workflow attaches a pridge-wp-endpoint.zip asset that always extracts
+	 * to a "pridge-wp-endpoint" folder. Preferred over GitHub's own auto-generated
+	 * source zip/zipball, both of which embed the version or a commit hash in the
+	 * folder name and would otherwise install as a new, differently-named plugin on
+	 * every release.
+	 *
+	 * @param array<string, mixed> $data Decoded GitHub release API response.
+	 * @return string
+	 */
+	private static function release_asset_zip_url( array $data ) {
+		if ( empty( $data['assets'] ) || ! is_array( $data['assets'] ) ) {
+			return '';
+		}
+
+		foreach ( $data['assets'] as $asset ) {
+			if ( is_array( $asset ) && 'pridge-wp-endpoint.zip' === ( $asset['name'] ?? '' ) && ! empty( $asset['browser_download_url'] ) ) {
+				return (string) $asset['browser_download_url'];
+			}
+		}
+
+		return '';
 	}
 }

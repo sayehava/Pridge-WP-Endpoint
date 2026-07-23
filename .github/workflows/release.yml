@@ -40,10 +40,27 @@ jobs:
             exit 1
           fi
 
+      - name: Build plugin zip with a stable folder name
+        run: |
+          # GitHub's auto-generated "Source code" archives use a folder named
+          # "Pridge-WP-Endpoint-<version>", which changes on every release and makes
+          # WordPress treat each install as a brand new plugin. This asset always
+          # extracts to "pridge-wp-endpoint" instead, no matter the version.
+          mkdir -p /tmp/build/pridge-wp-endpoint
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.gitignore' \
+            --exclude='.DS_Store' \
+            --exclude='release-notes.md' \
+            ./ /tmp/build/pridge-wp-endpoint/
+          ( cd /tmp/build && zip -rq "${GITHUB_WORKSPACE}/pridge-wp-endpoint.zip" pridge-wp-endpoint )
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
             --title "${GITHUB_REF_NAME}" \
-            --notes-file release-notes.md
+            --notes-file release-notes.md \
+            pridge-wp-endpoint.zip
