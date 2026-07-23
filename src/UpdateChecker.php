@@ -34,7 +34,28 @@ final class UpdateChecker {
 		add_filter( 'pre_set_site_transient_update_plugins', array( self::class, 'inject_update' ) );
 		add_filter( 'plugins_api', array( self::class, 'plugin_info' ), 10, 3 );
 		add_action( 'upgrader_pre_install', array( self::class, 'before_install' ), 10, 2 );
+		add_filter( 'upgrader_source_selection', array( self::class, 'fix_source_directory' ), 10, 4 );
 		add_action( 'upgrader_process_complete', array( self::class, 'after_install' ), 10, 2 );
+	}
+
+	/**
+	 * Icon shown on the native Plugins/Update screens only - the admin menu keeps its own icon.
+	 *
+	 * @return array{'1x': string, '2x': string, 'default': string}
+	 */
+	public static function icons() {
+		$icons = array();
+
+		if ( is_readable( PRIDGE_WP_DIR . 'assets/images/icon-128.png' ) ) {
+			$icons['1x']      = PRIDGE_WP_URL . 'assets/images/icon-128.png';
+			$icons['default'] = $icons['1x'];
+		}
+
+		if ( is_readable( PRIDGE_WP_DIR . 'assets/images/icon-256.png' ) ) {
+			$icons['2x'] = PRIDGE_WP_URL . 'assets/images/icon-256.png';
+		}
+
+		return $icons;
 	}
 
 	/**
@@ -70,7 +91,7 @@ final class UpdateChecker {
 			'tested'       => '',
 			'requires'     => '',
 			'requires_php' => '',
-			'icons'        => array(),
+			'icons'        => self::icons(),
 			'banners'      => array(),
 		);
 
@@ -103,6 +124,7 @@ final class UpdateChecker {
 				'description' => __( 'Connects WordPress and WooCommerce to Pridge Server print endpoints.', 'pridge-wp-endpoint' ),
 				'changelog'   => wpautop( wp_kses_post( $release['notes'] ) ),
 			),
+			'icons'         => self::icons(),
 			'download_link' => $release['zip_url'],
 		);
 	}
@@ -134,6 +156,55 @@ final class UpdateChecker {
 		}
 
 		return $true;
+	}
+
+	/**
+	 * GitHub's release zipball extracts to a commit-hash-named folder (e.g.
+	 * "sayehava-Pridge-WP-Endpoint-abc1234"), not "pridge-wp-endpoint". Left
+	 * alone, WordPress installs the update under that mismatched folder name
+	 * while the original plugin folder is removed, which orphans the
+	 * previously active plugin path - it disappears from the Plugins page
+	 * instead of being updated in place. Renaming the extracted folder here,
+	 * before WordPress moves it into wp-content/plugins, keeps the slug
+	 * stable across updates.
+	 *
+	 * @param string|WP_Error $source        Path to the extracted source directory.
+	 * @param string          $remote_source Path to the parent temporary directory.
+	 * @param mixed           $upgrader      Unused.
+	 * @param array           $hook_extra    Extra arguments, includes 'plugin' for a plugin update.
+	 * @return string|WP_Error
+	 */
+	public static function fix_source_directory( $source, $remote_source, $upgrader, $hook_extra = array() ) {
+		unset( $upgrader );
+
+		if ( is_wp_error( $source ) || empty( $hook_extra['plugin'] ) || $hook_extra['plugin'] !== self::plugin_basename() ) {
+			return $source;
+		}
+
+		global $wp_filesystem;
+
+		if ( ! $wp_filesystem instanceof \WP_Filesystem_Base ) {
+			return $source;
+		}
+
+		$desired = trailingslashit( $remote_source ) . dirname( self::plugin_basename() );
+
+		if ( untrailingslashit( $source ) === untrailingslashit( $desired ) ) {
+			return $source;
+		}
+
+		if ( $wp_filesystem->exists( $desired ) ) {
+			$wp_filesystem->delete( $desired, true );
+		}
+
+		if ( ! $wp_filesystem->move( $source, $desired, true ) ) {
+			return new WP_Error(
+				'pridge_source_rename_failed',
+				__( 'Pridge WP Endpoint update stopped: could not rename the downloaded release to the plugin folder name.', 'pridge-wp-endpoint' )
+			);
+		}
+
+		return trailingslashit( $desired );
 	}
 
 	/**
