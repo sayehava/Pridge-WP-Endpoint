@@ -439,6 +439,7 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pri
 .pridge-settings-form {
 	display: grid;
 	gap: 22px;
+	margin-top: 22px;
 }
 
 .pridge-panel {
@@ -705,9 +706,13 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pri
 	appearance: none;
 }
 
-.pridge-admin option {
-	color: var(--text);
-	background-color: #0c1021;
+.pridge-admin option,
+.pridge-admin option:hover,
+.pridge-admin option:checked,
+.pridge-admin option:focus,
+.pridge-admin option:active {
+	color: var(--text) !important;
+	background-color: #0c1021 !important;
 }
 
 .pridge-admin input:hover,

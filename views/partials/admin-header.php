@@ -30,9 +30,9 @@ $notice = isset( $_GET['pb_notice'] ) ? sanitize_key( wp_unslash( $_GET['pb_noti
 			'settings' => array( \Pridge\Admin\Admin::PAGE_SETTINGS, __( 'Settings', 'pridge-wp-endpoint' ) ),
 			'archive'  => array( \Pridge\Admin\Admin::PAGE_ARCHIVE, __( 'Print Archive', 'pridge-wp-endpoint' ) ),
 		);
-		foreach ( $tabs as $tab_key => $tab ) :
+		foreach ( $tabs as $tab_key => $nav_tab ) :
 			?>
-			<a class="<?php echo $active_page === $tab_key ? 'is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $tab[0] ) ); ?>"><?php echo esc_html( $tab[1] ); ?></a>
+			<a class="<?php echo $active_page === $tab_key ? 'is-active' : ''; ?>" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $nav_tab[0] ) ); ?>"><?php echo esc_html( $nav_tab[1] ); ?></a>
 		<?php endforeach; ?>
 	</nav>
 	<?php if ( 'test-success' === $notice ) : ?>
