@@ -3,7 +3,7 @@ Contributors: sayehava
 Tags: printing, woocommerce, endpoint, receipt, pridge
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -49,6 +49,17 @@ When Shiptastic for WooCommerce is active, each active carrier appears as a sepa
 route. Pridge forwards the original label payload when Shiptastic creates it.
 
 == Changelog ==
+
+= 1.0.2 =
+
+* Fixed: the Settings page's General/Integrations/Endpoints & Routing sub-tabs always
+  showed General no matter which one was clicked - the admin header's own navigation
+  reused the same variable name as the sub-tab router and silently overwrote it on every
+  request.
+* Fixed: panels on the Overview page (Diagnostics, Pending-order automation, Updates &
+  Backups) had no spacing between them and sat flush against each other.
+* Strengthened the dropdown hover-readability fix from 1.0.1 with higher-priority rules,
+  for cases the first pass did not fully cover.
 
 = 1.0.1 =
 
