@@ -719,8 +719,9 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pri
 .pridge-admin select:hover,
 .pridge-admin input:focus,
 .pridge-admin select:focus {
-	border-color: var(--border-bright);
-	background-color: rgba(8, 12, 28, 0.9);
+	color: var(--text) !important;
+	border-color: var(--border-bright) !important;
+	background-color: rgba(8, 12, 28, 0.9) !important;
 	box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.09), inset 0 1px 6px rgba(0, 0, 0, 0.24);
 }
 
