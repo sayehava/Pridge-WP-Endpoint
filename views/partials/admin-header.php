@@ -47,8 +47,10 @@ $notice = isset( $_GET['pb_notice'] ) ? sanitize_key( wp_unslash( $_GET['pb_noti
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Backup restored.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php elseif ( 'restore-error' === $notice ) : ?>
 		<div class="pridge-message is-error" role="alert"><strong><?php esc_html_e( 'Could not restore that backup. Check the site error log for details.', 'pridge-wp-endpoint' ); ?></strong></div>
-	<?php elseif ( 'check-updates-done' === $notice ) : ?>
-		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Checked for updates.', 'pridge-wp-endpoint' ); ?></strong> <?php esc_html_e( 'See the Plugins page for the result.', 'pridge-wp-endpoint' ); ?></div>
+	<?php elseif ( 'backup-now-success' === $notice ) : ?>
+		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Backup created.', 'pridge-wp-endpoint' ); ?></strong></div>
+	<?php elseif ( 'backup-now-error' === $notice ) : ?>
+		<div class="pridge-message is-error" role="alert"><strong><?php esc_html_e( 'Could not create a backup. Check the site error log for details.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php elseif ( 'cron-check-done' === $notice ) : ?>
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Pending-order check ran.', 'pridge-wp-endpoint' ); ?></strong> <?php esc_html_e( 'Any order whose documents are now all ready was printed.', 'pridge-wp-endpoint' ); ?></div>
 	<?php elseif ( 'pending-order-sent' === $notice ) : ?>

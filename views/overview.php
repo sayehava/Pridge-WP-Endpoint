@@ -141,22 +141,24 @@ require PRIDGE_WP_DIR . 'views/partials/admin-header.php';
 				<p>
 					<?php
 					printf(
-						/* translators: %s: opening and closing <a> tags linking to the Plugins page. */
-						esc_html__( 'Updates for Pridge WP Endpoint appear on the %1$sPlugins page%2$s like any other plugin, using WordPress\'s own update flow. A backup is taken automatically right before an update installs.', 'pridge-wp-endpoint' ),
+						/* translators: 1: opening <a> tag linking to the Plugins page, 2: closing </a> tag, 3: opening <a> tag linking to the Updates page, 4: closing </a> tag. */
+						esc_html__( 'Updates for Pridge WP Endpoint appear on the %1$sPlugins page%2$s like any other plugin, using WordPress\'s own update flow. WordPress checks for a new version on its usual schedule; to check right now, use "Check Again" on the %3$sUpdates page%4$s. A backup is taken automatically right before an update installs.', 'pridge-wp-endpoint' ),
 						'<a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">',
+						'</a>',
+						'<a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">',
 						'</a>'
 					);
 					?>
 				</p>
 			</div>
 			<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
-				<input type="hidden" name="action" value="pridge_wp_check_updates">
-				<?php wp_nonce_field( 'pridge_wp_check_updates' ); ?>
-				<button class="button pridge-button is-secondary" type="submit"><?php esc_html_e( 'Check for updates now', 'pridge-wp-endpoint' ); ?></button>
+				<input type="hidden" name="action" value="pridge_wp_backup_now">
+				<?php wp_nonce_field( 'pridge_wp_backup_now' ); ?>
+				<button class="button pridge-button is-secondary" type="submit"><?php esc_html_e( 'Backup now', 'pridge-wp-endpoint' ); ?></button>
 			</form>
 		</div>
 		<?php if ( empty( $backups ) ) : ?>
-			<p class="pridge-empty-state"><?php esc_html_e( 'No backups yet. One is created automatically the first time an update installs.', 'pridge-wp-endpoint' ); ?></p>
+			<p class="pridge-empty-state"><?php esc_html_e( 'No backups yet. Create one any time with "Backup now", or it happens automatically right before an update installs.', 'pridge-wp-endpoint' ); ?></p>
 		<?php else : ?>
 			<div class="pridge-table-wrap">
 				<table class="pridge-archive-table">

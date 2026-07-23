@@ -77,7 +77,7 @@ final class Admin {
 		add_action( 'admin_post_pridge_wp_test_germanized_order', array( $this, 'handle_germanized_test_print' ) );
 		add_action( 'admin_post_pridge_wp_archive_payload', array( $this, 'handle_archive_payload' ) );
 		add_action( 'admin_post_pridge_wp_restore_backup', array( $this, 'handle_restore_backup' ) );
-		add_action( 'admin_post_pridge_wp_check_updates', array( $this, 'handle_check_updates' ) );
+		add_action( 'admin_post_pridge_wp_backup_now', array( $this, 'handle_backup_now' ) );
 		add_action( 'admin_post_pridge_wp_run_cron_check', array( $this, 'handle_run_cron_check' ) );
 		add_action( 'admin_post_pridge_wp_send_pending_order', array( $this, 'handle_send_pending_order' ) );
 		add_action( 'wp_ajax_pridge_wp_archive_detail', array( $this, 'handle_archive_detail' ) );
@@ -615,23 +615,25 @@ final class Admin {
 	}
 
 	/**
+	 * Create a backup on demand, independent of any pending update.
+	 *
 	 * @return void
 	 */
-	public function handle_check_updates() {
+	public function handle_backup_now() {
 		$this->authorize();
-		check_admin_referer( 'pridge_wp_check_updates' );
+		check_admin_referer( 'pridge_wp_backup_now' );
 
-		UpdateChecker::force_check();
+		$args = array( 'page' => self::PAGE_OVERVIEW );
 
-		wp_safe_redirect(
-			add_query_arg(
-				array(
-					'page'      => self::PAGE_OVERVIEW,
-					'pb_notice' => 'check-updates-done',
-				),
-				admin_url( 'admin.php' )
-			)
-		);
+		try {
+			UpdateChecker::create_backup();
+			$args['pb_notice'] = 'backup-now-success';
+		} catch ( RuntimeException $exception ) {
+			error_log( 'Pridge WP Endpoint: manual backup failed: ' . $exception->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			$args['pb_notice'] = 'backup-now-error';
+		}
+
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
 		exit;
 	}
 

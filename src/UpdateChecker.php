@@ -74,7 +74,7 @@ final class UpdateChecker {
 			return $transient;
 		}
 
-		$release = self::latest_release();
+		$release = self::latest_release( ! empty( $_GET['force-check'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only, mirrors WordPress core's own force-check flag on the Updates screen.
 		if ( null === $release || version_compare( $release['version'], PRIDGE_WP_VERSION, '<=' ) ) {
 			return $transient;
 		}
@@ -109,7 +109,7 @@ final class UpdateChecker {
 			return $result;
 		}
 
-		$release = self::latest_release();
+		$release = self::latest_release( ! empty( $_GET['force-check'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only, mirrors WordPress core's own force-check flag on the Updates screen.
 		if ( null === $release ) {
 			return $result;
 		}
@@ -356,10 +356,18 @@ final class UpdateChecker {
 	}
 
 	/**
+	 * Fetch the latest GitHub release, honoring WordPress's own cached result until it
+	 * expires. WordPress core itself only recalculates the update_plugins transient on
+	 * a schedule or when the admin clicks "Check Again" on the Updates screen (which
+	 * sets the force-check flag this class reads in inject_update()/plugin_info()) - a
+	 * stale local cache here would otherwise make even that native forced check keep
+	 * reporting no update available.
+	 *
+	 * @param bool $force Bypass the cached result and query GitHub now.
 	 * @return array{version:string, notes:string, zip_url:string}|null
 	 */
-	public static function latest_release() {
-		$cached = get_transient( self::CHECK_TRANSIENT );
+	public static function latest_release( $force = false ) {
+		$cached = $force ? false : get_transient( self::CHECK_TRANSIENT );
 		if ( is_array( $cached ) ) {
 			return array() === $cached ? null : $cached;
 		}
@@ -392,12 +400,5 @@ final class UpdateChecker {
 		set_transient( self::CHECK_TRANSIENT, $release, self::CHECK_INTERVAL );
 
 		return $release;
-	}
-
-	/**
-	 * @return void
-	 */
-	public static function force_check() {
-		delete_transient( self::CHECK_TRANSIENT );
 	}
 }
