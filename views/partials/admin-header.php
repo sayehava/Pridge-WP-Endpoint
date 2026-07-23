@@ -26,10 +26,9 @@ $notice = isset( $_GET['pb_notice'] ) ? sanitize_key( wp_unslash( $_GET['pb_noti
 	<nav class="pridge-tabs" aria-label="<?php esc_attr_e( 'Pridge sections', 'pridge-wp-endpoint' ); ?>">
 		<?php
 		$tabs = array(
-			'overview'     => array( \Pridge\Admin\Admin::PAGE_OVERVIEW, __( 'Overview', 'pridge-wp-endpoint' ) ),
-			'integrations' => array( \Pridge\Admin\Admin::PAGE_INTEGRATIONS, __( 'Integrations', 'pridge-wp-endpoint' ) ),
-			'endpoints'    => array( \Pridge\Admin\Admin::PAGE_ENDPOINTS, __( 'Endpoints & Routing', 'pridge-wp-endpoint' ) ),
-			'archive'      => array( \Pridge\Admin\Admin::PAGE_ARCHIVE, __( 'Print Archive', 'pridge-wp-endpoint' ) ),
+			'overview' => array( \Pridge\Admin\Admin::PAGE_OVERVIEW, __( 'Overview', 'pridge-wp-endpoint' ) ),
+			'settings' => array( \Pridge\Admin\Admin::PAGE_SETTINGS, __( 'Settings', 'pridge-wp-endpoint' ) ),
+			'archive'  => array( \Pridge\Admin\Admin::PAGE_ARCHIVE, __( 'Print Archive', 'pridge-wp-endpoint' ) ),
 		);
 		foreach ( $tabs as $tab_key => $tab ) :
 			?>
@@ -50,6 +49,10 @@ $notice = isset( $_GET['pb_notice'] ) ? sanitize_key( wp_unslash( $_GET['pb_noti
 		<div class="pridge-message is-error" role="alert"><strong><?php esc_html_e( 'Could not restore that backup. Check the site error log for details.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php elseif ( 'check-updates-done' === $notice ) : ?>
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Checked for updates.', 'pridge-wp-endpoint' ); ?></strong> <?php esc_html_e( 'See the Plugins page for the result.', 'pridge-wp-endpoint' ); ?></div>
+	<?php elseif ( 'cron-check-done' === $notice ) : ?>
+		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Pending-order check ran.', 'pridge-wp-endpoint' ); ?></strong> <?php esc_html_e( 'Any order whose documents are now all ready was printed.', 'pridge-wp-endpoint' ); ?></div>
+	<?php elseif ( 'pending-order-sent' === $notice ) : ?>
+		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Sent whatever documents currently exist for that order.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php elseif ( isset( $_GET['settings-updated'] ) ) : ?>
 		<div class="pridge-message is-success" role="status"><strong><?php esc_html_e( 'Settings saved.', 'pridge-wp-endpoint' ); ?></strong></div>
 	<?php endif; ?>

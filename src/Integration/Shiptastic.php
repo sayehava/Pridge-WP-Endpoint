@@ -8,6 +8,7 @@
 namespace Pridge\Integration;
 
 use Pridge\EndpointRepository;
+use Pridge\IntegrationSettings;
 use Pridge\JobService;
 
 defined( 'ABSPATH' ) || exit;
@@ -19,13 +20,18 @@ final class Shiptastic {
 	/** @var EndpointRepository */
 	private $endpoints;
 
+	/** @var IntegrationSettings|null */
+	private $settings;
+
 	/**
-	 * @param JobService         $jobs      Print job service.
-	 * @param EndpointRepository $endpoints Document routes.
+	 * @param JobService              $jobs      Print job service.
+	 * @param EndpointRepository      $endpoints Document routes.
+	 * @param IntegrationSettings|null $settings Integration settings, used to apply the post-print shipment status.
 	 */
-	public function __construct( JobService $jobs, EndpointRepository $endpoints ) {
+	public function __construct( JobService $jobs, EndpointRepository $endpoints, IntegrationSettings $settings = null ) {
 		$this->jobs      = $jobs;
 		$this->endpoints = $endpoints;
+		$this->settings  = $settings;
 	}
 
 	/**
@@ -156,7 +162,100 @@ final class Shiptastic {
 			}
 		}
 
+		if ( ! $force && ! is_wp_error( $result ) ) {
+			$this->apply_post_print_status( $shipment );
+		}
+
 		return $result;
+	}
+
+	/**
+	 * Move a shipment to the configured post-print status once its label has printed.
+	 *
+	 * @param object $shipment Shiptastic shipment object.
+	 * @return void
+	 */
+	private function apply_post_print_status( $shipment ) {
+		if ( null === $this->settings ) {
+			return;
+		}
+
+		$target = sanitize_key( (string) $this->settings->get( 'post_print_shiptastic_status', '' ) );
+		if ( '' === $target || ! is_object( $shipment ) ) {
+			return;
+		}
+
+		if ( is_callable( array( $shipment, 'get_status' ) ) && $target === sanitize_key( (string) $shipment->get_status() ) ) {
+			return;
+		}
+
+		if ( is_callable( array( $shipment, 'update_status' ) ) ) {
+			$shipment->update_status( $target );
+			return;
+		}
+
+		if ( is_callable( array( $shipment, 'set_status' ) ) && is_callable( array( $shipment, 'save' ) ) ) {
+			$shipment->set_status( $target );
+			$shipment->save();
+		}
+	}
+
+	/**
+	 * Configured shipping-label document route keys that currently have no readable label.
+	 *
+	 * Used by the WP-Cron readiness check so an order is not printed until every routed
+	 * label has actually been generated.
+	 *
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return string[]
+	 */
+	public function missing_label_routes( \WC_Order $order ) {
+		$configured = $this->configured_label_routes();
+		if ( empty( $configured ) || ! function_exists( 'wc_stc_get_shipments_by_order' ) ) {
+			return array();
+		}
+
+		$found = array();
+		foreach ( (array) wc_stc_get_shipments_by_order( $order ) as $shipment ) {
+			if ( ! is_object( $shipment ) || ! is_callable( array( $shipment, 'get_label' ) ) ) {
+				continue;
+			}
+
+			$label = $shipment->get_label();
+			if ( ! is_object( $label ) || ! is_callable( array( $label, 'get_stream' ) ) ) {
+				continue;
+			}
+
+			$provider = '';
+			if ( is_callable( array( $label, 'get_shipping_provider' ) ) ) {
+				$provider = sanitize_key( (string) $label->get_shipping_provider() );
+			} elseif ( is_callable( array( $shipment, 'get_shipping_provider' ) ) ) {
+				$provider = sanitize_key( (string) $shipment->get_shipping_provider() );
+			}
+
+			if ( '' !== $provider ) {
+				$found[ 'shipping_label__' . $provider ] = true;
+			}
+		}
+
+		return array_values( array_diff( $configured, array_keys( $found ) ) );
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function configured_label_routes() {
+		$settings = $this->endpoints->all();
+		$routes   = isset( $settings['routes'] ) && is_array( $settings['routes'] ) ? $settings['routes'] : array();
+		$types    = array();
+
+		foreach ( $routes as $document_type => $endpoint_id ) {
+			if ( 0 === strpos( (string) $document_type, 'shipping_label__' ) && '' !== sanitize_key( $endpoint_id ) ) {
+				$types[] = sanitize_key( $document_type );
+			}
+		}
+
+		return $types;
 	}
 
 	/**

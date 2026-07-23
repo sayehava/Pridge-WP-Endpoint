@@ -35,6 +35,9 @@ final class Plugin {
 	/** @var IntegrationManager */
 	private $integrations;
 
+	/** @var Cron */
+	private $cron;
+
 	/** @var Admin|null */
 	private $admin;
 
@@ -50,7 +53,8 @@ final class Plugin {
 		$this->integration_settings = new IntegrationSettings();
 		$this->jobs                 = new JobService( $this->settings, new Client(), $this->endpoints, $this->archive );
 		$this->integrations         = new IntegrationManager( $this->integration_settings, $this->jobs, $this->endpoints );
-		$this->admin                = is_admin() ? new Admin( $this->settings, $this->jobs, $this->endpoints, $this->integration_settings, $this->archive ) : null;
+		$this->cron                 = new Cron( $this->integration_settings, $this->jobs, $this->endpoints );
+		$this->admin                = is_admin() ? new Admin( $this->settings, $this->jobs, $this->endpoints, $this->integration_settings, $this->archive, $this->cron ) : null;
 	}
 
 	/**
@@ -117,6 +121,7 @@ final class Plugin {
 	private function register_hooks() {
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 		$this->integrations->register();
+		$this->cron->register();
 
 		if ( is_admin() || wp_doing_cron() ) {
 			UpdateChecker::register();

@@ -45,7 +45,7 @@ final class Manager {
 			$woocommerce->register();
 
 			if ( $this->settings->get( 'woocommerce_enabled', false ) && function_exists( 'wc_stc_get_shipping_providers' ) ) {
-				$shiptastic = new Shiptastic( $this->jobs, $this->endpoints );
+				$shiptastic = new Shiptastic( $this->jobs, $this->endpoints, $this->settings );
 				$shiptastic->register();
 			}
 

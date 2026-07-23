@@ -7,6 +7,7 @@
 
 namespace Pridge\Integration;
 
+use Pridge\Cron;
 use Pridge\EndpointRepository;
 use Pridge\IntegrationSettings;
 use Pridge\JobService;
@@ -108,18 +109,65 @@ final class WooCommerce {
 	/**
 	 * Process every order document that has an assigned route.
 	 *
+	 * Built-in WooCommerce documents (receipt, invoice, packing slip) are generated
+	 * on the spot from order data and are always ready immediately. Germanized's
+	 * invoice, packing-slip, and shipping-label PDFs are files that can take time to
+	 * finish generating after the order event fires, so those are only sent once
+	 * every routed one of them exists - an order still missing one is left for
+	 * Cron to pick up and print as soon as they are all ready.
+	 *
 	 * @param \WC_Order $order WooCommerce order.
 	 * @return void
 	 */
 	private function process_order( \WC_Order $order ) {
 		$document_types = array( 'receipt', 'invoice', 'packing_slip' );
+		$germanized_pending = false;
+
 		if ( $this->settings->get( 'germanized_enabled', false ) && Germanized::is_available() ) {
-			$document_types = array( 'receipt' );
-			( new GermanizedDocuments( $this->jobs, $this->endpoints ) )->submit_order( $order->get_id(), false );
+			$document_types      = array( 'receipt' );
+			$germanized_pending = $this->dispatch_germanized_documents( $order );
 		}
 
 		foreach ( $document_types as $document_type ) {
 			$this->process_document( $order, $document_type, 0 );
+		}
+
+		if ( ! $germanized_pending ) {
+			$this->apply_post_print_status( $order );
+		}
+	}
+
+	/**
+	 * Send an order's Germanized documents now if they are all ready, or mark it
+	 * pending for Cron to retry once they are.
+	 *
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return bool True when the order still has documents pending and was not sent.
+	 */
+	private function dispatch_germanized_documents( \WC_Order $order ) {
+		$germanized = new GermanizedDocuments( $this->jobs, $this->endpoints, $this->settings );
+
+		if ( ! empty( $germanized->missing_documents( $order->get_id() ) ) ) {
+			Cron::mark_pending( $order->get_id() );
+			return true;
+		}
+
+		$germanized->submit_order( $order->get_id(), false );
+
+		return false;
+	}
+
+	/**
+	 * Move the order to the configured post-print WooCommerce status.
+	 *
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return void
+	 */
+	public function apply_post_print_status( \WC_Order $order ) {
+		$target = sanitize_key( (string) $this->settings->get( 'post_print_woocommerce_status', '' ) );
+
+		if ( '' !== $target && $target !== $order->get_status() ) {
+			$order->update_status( $target, __( 'Pridge: order documents printed.', 'pridge-wp-endpoint' ) );
 		}
 	}
 

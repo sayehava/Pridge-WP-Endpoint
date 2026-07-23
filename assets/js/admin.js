@@ -216,6 +216,72 @@
 		} );
 	}
 
+	const cronMonitor = root.querySelector( '[data-pridge-cron-monitor]' );
+	const cronConfig = window.PridgeAdmin || {};
+	if ( cronMonitor && cronConfig.ajaxUrl && cronConfig.cronStatusNonce ) {
+		const healthCard = cronMonitor.querySelector( '[data-cron-health-card]' );
+		const healthText = cronMonitor.querySelector( '[data-cron-health]' );
+		const liveDot     = cronMonitor.querySelector( '[data-cron-live-dot]' );
+		const lastRunEl   = cronMonitor.querySelector( '[data-cron-last-run]' );
+		const nextRunEl   = cronMonitor.querySelector( '[data-cron-next-run]' );
+		const pendingEl   = cronMonitor.querySelector( '[data-cron-pending]' );
+		const warningEl   = cronMonitor.querySelector( '[data-cron-warning]' );
+		const cronLabels  = cronConfig.cronLabels || {};
+
+		let lastKnownRun = parseInt( cronMonitor.dataset.lastRun || '0', 10 );
+
+		async function pollCronStatus() {
+			const form = new FormData();
+			form.append( 'action', 'pridge_wp_cron_status' );
+			form.append( 'nonce', cronConfig.cronStatusNonce );
+
+			try {
+				const response = await fetch( cronConfig.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: form } );
+				const body = await response.json();
+				if ( ! response.ok || ! body.success ) {
+					return;
+				}
+
+				const data = body.data;
+
+				if ( healthText ) {
+					healthText.textContent = data.healthy ? cronLabels.running : cronLabels.notConfirmed;
+				}
+				if ( healthCard ) {
+					healthCard.classList.toggle( 'is-healthy', data.healthy );
+					healthCard.classList.toggle( 'is-unhealthy', ! data.healthy );
+				}
+				if ( liveDot ) {
+					liveDot.classList.toggle( 'is-healthy', data.healthy );
+				}
+				if ( lastRunEl ) {
+					lastRunEl.textContent = data.lastRunRelative;
+				}
+				if ( nextRunEl ) {
+					nextRunEl.textContent = data.nextRunRelative;
+				}
+				if ( pendingEl ) {
+					pendingEl.textContent = data.pendingCount;
+				}
+				if ( warningEl ) {
+					warningEl.hidden = data.healthy;
+				}
+
+				if ( data.lastRun && data.lastRun !== lastKnownRun ) {
+					lastKnownRun = data.lastRun;
+					if ( healthCard && ! reduceMotion ) {
+						healthCard.classList.add( 'is-flash' );
+						window.setTimeout( () => healthCard.classList.remove( 'is-flash' ), 1200 );
+					}
+				}
+			} catch ( error ) {
+				// A missed poll is not worth surfacing; the next interval tries again.
+			}
+		}
+
+		window.setInterval( pollCronStatus, 20000 );
+	}
+
 	const archiveModal = document.getElementById( 'pridge-archive-modal' );
 	const archiveSummary = root.querySelector( '[data-pridge-archive-summary]' );
 	const archivePreview = root.querySelector( '[data-pridge-archive-preview]' );

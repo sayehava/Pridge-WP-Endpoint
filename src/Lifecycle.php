@@ -115,6 +115,7 @@ final class Lifecycle {
 	public static function deactivate() {
 		wp_clear_scheduled_hook( 'pridge_wp_retry_woocommerce_order' );
 		wp_clear_scheduled_hook( 'pridge_wp_retry_woocommerce_document' );
+		wp_clear_scheduled_hook( Cron::HOOK );
 
 		if ( function_exists( 'as_unschedule_all_actions' ) ) {
 			as_unschedule_all_actions( 'pridge_wp_retry_woocommerce_order', array(), 'pridge' );

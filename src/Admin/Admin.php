@@ -8,6 +8,7 @@
 namespace Pridge\Admin;
 
 use Pridge\ArchiveRepository;
+use Pridge\Cron;
 use Pridge\EndpointRepository;
 use Pridge\Integration\Germanized;
 use Pridge\Integration\GermanizedDocuments;
@@ -20,10 +21,12 @@ use RuntimeException;
 defined( 'ABSPATH' ) || exit;
 
 final class Admin {
-	public const PAGE_OVERVIEW     = 'pridge-wp-endpoint';
-	public const PAGE_ENDPOINTS    = 'pridge-wp-endpoints';
-	public const PAGE_INTEGRATIONS = 'pridge-wp-integrations';
-	public const PAGE_ARCHIVE      = 'pridge-wp-archive';
+	public const PAGE_OVERVIEW = 'pridge-wp-endpoint';
+	public const PAGE_SETTINGS = 'pridge-wp-settings';
+	public const PAGE_ARCHIVE  = 'pridge-wp-archive';
+
+	/** Settings page sub-tab keys, in display order. */
+	public const SETTINGS_TABS = array( 'general', 'integrations', 'endpoints' );
 
 	/** @var Settings */
 	private $settings;
@@ -40,6 +43,9 @@ final class Admin {
 	/** @var ArchiveRepository */
 	private $archive;
 
+	/** @var Cron */
+	private $cron;
+
 	/** @var string[] */
 	private $hook_suffixes = array();
 
@@ -49,13 +55,15 @@ final class Admin {
 	 * @param EndpointRepository  $endpoints            Named endpoints and routes.
 	 * @param IntegrationSettings $integration_settings Integration switches.
 	 * @param ArchiveRepository   $archive              Print archive.
+	 * @param Cron                $cron                 Pending-order polling.
 	 */
-	public function __construct( Settings $settings, JobService $jobs, EndpointRepository $endpoints, IntegrationSettings $integration_settings, ArchiveRepository $archive ) {
+	public function __construct( Settings $settings, JobService $jobs, EndpointRepository $endpoints, IntegrationSettings $integration_settings, ArchiveRepository $archive, Cron $cron ) {
 		$this->settings             = $settings;
 		$this->jobs                 = $jobs;
 		$this->endpoints            = $endpoints;
 		$this->integration_settings = $integration_settings;
 		$this->archive              = $archive;
+		$this->cron                 = $cron;
 	}
 
 	/**
@@ -70,14 +78,16 @@ final class Admin {
 		add_action( 'admin_post_pridge_wp_archive_payload', array( $this, 'handle_archive_payload' ) );
 		add_action( 'admin_post_pridge_wp_restore_backup', array( $this, 'handle_restore_backup' ) );
 		add_action( 'admin_post_pridge_wp_check_updates', array( $this, 'handle_check_updates' ) );
+		add_action( 'admin_post_pridge_wp_run_cron_check', array( $this, 'handle_run_cron_check' ) );
+		add_action( 'admin_post_pridge_wp_send_pending_order', array( $this, 'handle_send_pending_order' ) );
 		add_action( 'wp_ajax_pridge_wp_archive_detail', array( $this, 'handle_archive_detail' ) );
+		add_action( 'wp_ajax_pridge_wp_cron_status', array( $this, 'handle_cron_status_ajax' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( PRIDGE_WP_FILE ), array( $this, 'add_plugin_action_link' ) );
 
 		$isolation = new NoticeIsolation(
 			array(
 				'toplevel_page_' . self::PAGE_OVERVIEW,
-				'pridge_page_' . self::PAGE_ENDPOINTS,
-				'pridge_page_' . self::PAGE_INTEGRATIONS,
+				'pridge_page_' . self::PAGE_SETTINGS,
 				'pridge_page_' . self::PAGE_ARCHIVE,
 			)
 		);
@@ -108,19 +118,11 @@ final class Admin {
 		);
 		$this->hook_suffixes[] = add_submenu_page(
 			self::PAGE_OVERVIEW,
-			__( 'Integrations', 'pridge-wp-endpoint' ),
-			__( 'Integrations', 'pridge-wp-endpoint' ),
+			__( 'Settings', 'pridge-wp-endpoint' ),
+			__( 'Settings', 'pridge-wp-endpoint' ),
 			'manage_options',
-			self::PAGE_INTEGRATIONS,
-			array( $this, 'render_integrations' )
-		);
-		$this->hook_suffixes[] = add_submenu_page(
-			self::PAGE_OVERVIEW,
-			__( 'Endpoints & Routing', 'pridge-wp-endpoint' ),
-			__( 'Endpoints & Routing', 'pridge-wp-endpoint' ),
-			'manage_options',
-			self::PAGE_ENDPOINTS,
-			array( $this, 'render_endpoints' )
+			self::PAGE_SETTINGS,
+			array( $this, 'render_settings' )
 		);
 		$this->hook_suffixes[] = add_submenu_page(
 			self::PAGE_OVERVIEW,
@@ -183,11 +185,16 @@ final class Admin {
 			'pridge-wp-admin',
 			'PridgeAdmin',
 			array(
-				'ajaxUrl'      => admin_url( 'admin-ajax.php' ),
-				'archiveNonce' => wp_create_nonce( 'pridge_wp_archive_detail' ),
+				'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+				'archiveNonce'   => wp_create_nonce( 'pridge_wp_archive_detail' ),
+				'cronStatusNonce'=> wp_create_nonce( 'pridge_wp_cron_status' ),
 				'loadingText'  => __( 'Loading archived payload…', 'pridge-wp-endpoint' ),
 				'errorText'    => __( 'The archived payload could not be loaded.', 'pridge-wp-endpoint' ),
 				'emptyText'    => __( 'No payload content.', 'pridge-wp-endpoint' ),
+				'cronLabels'   => array(
+					'running'      => __( 'Running', 'pridge-wp-endpoint' ),
+					'notConfirmed' => __( 'Not confirmed', 'pridge-wp-endpoint' ),
+				),
 				'archiveLabels'=> array(
 					'document' => __( 'Document', 'pridge-wp-endpoint' ),
 					'endpoint' => __( 'Endpoint', 'pridge-wp-endpoint' ),
@@ -209,24 +216,19 @@ final class Admin {
 	 */
 	public function render_overview() {
 		$this->authorize();
-		$settings      = $this->settings->all();
-		$endpoints     = $this->endpoints->fetch_all();
-		$archive_count = $this->archive->count();
-		$backups       = UpdateChecker::list_backups();
-		require PRIDGE_WP_DIR . 'views/overview.php';
-	}
-
-	/**
-	 * @return void
-	 */
-	public function render_integrations() {
-		$this->authorize();
-		$settings               = $this->integration_settings->all();
-		$woocommerce_active     = class_exists( 'WooCommerce' );
-		$germanized_available   = Germanized::is_available();
-		$shiptastic_available   = function_exists( 'wc_stc_get_shipment_order' );
-		$order_statuses         = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_statuses() : array();
-		$test_orders            = $woocommerce_active && function_exists( 'wc_get_orders' )
+		$settings              = $this->settings->all();
+		$is_configured         = $this->settings->is_configured();
+		$endpoints             = $this->endpoints->fetch_all();
+		$archive_count         = $this->archive->count();
+		$backups               = UpdateChecker::list_backups();
+		$germanized_enabled    = $this->integration_settings->get( 'germanized_enabled', false ) && Germanized::is_available();
+		$cron_interval_minutes = $this->cron->interval_minutes();
+		$cron_last_run         = Cron::last_run();
+		$cron_next_run         = Cron::next_run();
+		$cron_healthy          = Cron::is_healthy( $cron_interval_minutes );
+		$pending_count         = Cron::pending_count();
+		$attention_orders      = Cron::orders_needing_attention();
+		$test_orders           = $germanized_enabled && function_exists( 'wc_get_orders' )
 			? wc_get_orders(
 				array(
 					'limit'   => 50,
@@ -236,18 +238,44 @@ final class Admin {
 				)
 			)
 			: array();
-		require PRIDGE_WP_DIR . 'views/integrations.php';
+		require PRIDGE_WP_DIR . 'views/overview.php';
 	}
 
 	/**
+	 * Single Settings page with sub-tabs; every configuration form on the plugin lives here.
+	 *
 	 * @return void
 	 */
-	public function render_endpoints() {
+	public function render_settings() {
 		$this->authorize();
-		$settings       = $this->endpoints->all();
-		$endpoints      = $this->endpoints->fetch_all();
-		$document_types = $this->document_types();
-		require PRIDGE_WP_DIR . 'views/endpoints.php';
+
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general';
+		if ( ! in_array( $tab, self::SETTINGS_TABS, true ) ) {
+			$tab = 'general';
+		}
+
+		$settings             = $this->settings->all();
+		$integration_settings = $this->integration_settings->all();
+		$endpoint_settings    = $this->endpoints->all();
+		$endpoints            = $this->endpoints->fetch_all();
+		$document_types       = $this->document_types();
+
+		$woocommerce_active   = class_exists( 'WooCommerce' );
+		$germanized_available = Germanized::is_available();
+		$shiptastic_available = function_exists( 'wc_stc_get_shipment_order' );
+		$order_statuses       = function_exists( 'wc_get_order_statuses' ) ? wc_get_order_statuses() : array();
+		$shipment_statuses    = function_exists( 'wc_stc_get_shipment_statuses' )
+			? wc_stc_get_shipment_statuses()
+			: array(
+				'draft'      => __( 'Draft', 'pridge-wp-endpoint' ),
+				'processing' => __( 'Processing', 'pridge-wp-endpoint' ),
+				'shipped'    => __( 'Shipped', 'pridge-wp-endpoint' ),
+				'delivered'  => __( 'Delivered', 'pridge-wp-endpoint' ),
+				'returned'   => __( 'Returned', 'pridge-wp-endpoint' ),
+			);
+		$cron_intervals = IntegrationSettings::CRON_INTERVALS;
+
+		require PRIDGE_WP_DIR . 'views/settings.php';
 	}
 
 	/**
@@ -386,7 +414,7 @@ final class Admin {
 	 */
 	private function redirect_germanized_test( $order_id, $sent_count, $failed_count, $error_code = '' ) {
 		$args = array(
-			'page'         => self::PAGE_INTEGRATIONS,
+			'page'         => self::PAGE_OVERVIEW,
 			'pb_notice'    => 0 < $sent_count ? 'germanized-test-success' : 'germanized-test-error',
 			'order_id'     => absint( $order_id ),
 			'sent_count'   => absint( $sent_count ),
@@ -439,6 +467,43 @@ final class Admin {
 				'previewKind'   => $is_text ? 'text' : ( $is_inline ? 'document' : 'binary' ),
 				'preview'       => $is_text ? wp_check_invalid_utf8( $payload ) : ( $is_inline ? '' : $this->binary_preview( $payload ) ),
 				'payloadUrl'    => $is_inline ? $this->archive_payload_url( (int) $row['id'] ) : '',
+			)
+		);
+	}
+
+	/**
+	 * Live cron heartbeat for the Overview page's automation panel, polled by JavaScript.
+	 *
+	 * @return void
+	 */
+	public function handle_cron_status_ajax() {
+		$this->authorize();
+		check_ajax_referer( 'pridge_wp_cron_status', 'nonce' );
+
+		$interval_minutes = $this->cron->interval_minutes();
+		$last_run         = Cron::last_run();
+		$next_run         = Cron::next_run();
+
+		wp_send_json_success(
+			array(
+				'lastRun'         => $last_run,
+				'lastRunRelative' => $last_run
+					? sprintf(
+						/* translators: %s: human-readable time since the last run. */
+						__( 'Last ran %s ago', 'pridge-wp-endpoint' ),
+						human_time_diff( $last_run )
+					)
+					: __( 'Never run yet', 'pridge-wp-endpoint' ),
+				'nextRun'         => $next_run,
+				'nextRunRelative' => $next_run
+					? sprintf(
+						/* translators: %s: human-readable time until the next run. */
+						__( 'In %s', 'pridge-wp-endpoint' ),
+						human_time_diff( time(), $next_run )
+					)
+					: __( 'Not scheduled', 'pridge-wp-endpoint' ),
+				'healthy'         => Cron::is_healthy( $interval_minutes ),
+				'pendingCount'    => Cron::pending_count(),
 			)
 		);
 	}
@@ -571,6 +636,62 @@ final class Admin {
 	}
 
 	/**
+	 * Run the pending-order document check immediately, bypassing the wait for the
+	 * next scheduled WP-Cron tick. Also used to confirm the check itself still works.
+	 *
+	 * @return void
+	 */
+	public function handle_run_cron_check() {
+		$this->authorize();
+		check_admin_referer( 'pridge_wp_run_cron_check' );
+
+		$this->cron->run();
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'      => self::PAGE_OVERVIEW,
+					'pb_notice' => 'cron-check-done',
+				),
+				admin_url( 'admin.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
+	 * Force-send whatever Germanized documents currently exist for one order flagged
+	 * as needing manual attention, for a shop manager to finish what automation could not.
+	 *
+	 * @return void
+	 */
+	public function handle_send_pending_order() {
+		$this->authorize();
+		check_admin_referer( 'pridge_wp_send_pending_order' );
+
+		$order_id = isset( $_POST['order_id'] ) ? absint( $_POST['order_id'] ) : 0;
+		$order    = $order_id ? wc_get_order( $order_id ) : null;
+
+		if ( $order instanceof \WC_Order ) {
+			( new GermanizedDocuments( $this->jobs, $this->endpoints, $this->integration_settings ) )->submit_order( $order_id, true );
+			$order->delete_meta_data( Cron::PENDING_META );
+			$order->delete_meta_data( Cron::NEEDS_ATTENTION_META );
+			$order->save_meta_data();
+		}
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'      => self::PAGE_OVERVIEW,
+					'pb_notice' => 'pending-order-sent',
+				),
+				admin_url( 'admin.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
 	 * @param string[] $links Plugin action links.
 	 * @return string[]
 	 */
@@ -579,7 +700,7 @@ final class Admin {
 			$links,
 			sprintf(
 				'<a href="%1$s">%2$s</a>',
-				esc_url( admin_url( 'admin.php?page=' . self::PAGE_OVERVIEW ) ),
+				esc_url( admin_url( 'admin.php?page=' . self::PAGE_SETTINGS ) ),
 				esc_html__( 'Settings', 'pridge-wp-endpoint' )
 			)
 		);

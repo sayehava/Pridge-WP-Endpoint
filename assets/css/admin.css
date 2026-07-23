@@ -217,6 +217,43 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, 
 	box-shadow: 0 0 22px rgba(34, 211, 238, 0.07);
 }
 
+.pridge-subtabs {
+	display: flex;
+	position: relative;
+	z-index: 2;
+	width: min(1180px, 100%);
+	margin: 0 auto 22px;
+	padding: 4px;
+	gap: 4px;
+	overflow-x: auto;
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	background: rgba(12, 16, 33, 0.5);
+}
+
+.pridge-subtabs a {
+	flex: 0 0 auto;
+	padding: 8px 13px;
+	border: 1px solid transparent;
+	border-radius: 8px;
+	color: var(--muted);
+	font-size: 12.5px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.pridge-subtabs a:hover {
+	color: var(--text);
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.pridge-subtabs a.is-active {
+	border-color: rgba(34, 211, 238, 0.22);
+	color: var(--pridge-blue);
+	background: rgba(34, 211, 238, 0.08);
+}
+
 .pridge-version {
 	display: flex;
 	flex: 0 0 auto;
@@ -344,6 +381,58 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-integrations, 
 .pridge-stat-card small {
 	color: var(--muted);
 	font-size: 12px;
+}
+
+.pridge-stat-card.is-healthy strong {
+	color: var(--persian-green);
+}
+
+.pridge-stat-card.is-unhealthy strong {
+	color: var(--persian-red);
+}
+
+.pridge-stat-card.is-flash {
+	border-color: rgba(0, 166, 147, 0.5);
+	box-shadow: 0 0 0 1px rgba(0, 166, 147, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 22px 65px rgba(0, 0, 0, 0.26);
+	transition: border-color 250ms ease, box-shadow 250ms ease, transform 180ms ease;
+}
+
+.pridge-live-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	margin-left: 6px;
+	border-radius: 50%;
+	background: var(--persian-red);
+	vertical-align: middle;
+}
+
+.pridge-live-dot.is-healthy {
+	background: var(--persian-green);
+	box-shadow: 0 0 0 rgba(0, 166, 147, 0.55);
+	animation: pridge-live-pulse 2.2s ease-out infinite;
+}
+
+.pridge-admin.no-motion .pridge-live-dot.is-healthy {
+	animation: none;
+}
+
+@keyframes pridge-live-pulse {
+	0% {
+		box-shadow: 0 0 0 0 rgba(0, 166, 147, 0.55);
+	}
+	70% {
+		box-shadow: 0 0 0 8px rgba(0, 166, 147, 0);
+	}
+	100% {
+		box-shadow: 0 0 0 0 rgba(0, 166, 147, 0);
+	}
+}
+
+.pridge-button-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
 }
 
 .pridge-settings-form {

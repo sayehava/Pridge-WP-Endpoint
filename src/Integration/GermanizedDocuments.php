@@ -8,6 +8,7 @@
 namespace Pridge\Integration;
 
 use Pridge\EndpointRepository;
+use Pridge\IntegrationSettings;
 use Pridge\JobService;
 
 defined( 'ABSPATH' ) || exit;
@@ -19,13 +20,18 @@ final class GermanizedDocuments {
 	/** @var EndpointRepository */
 	private $endpoints;
 
+	/** @var IntegrationSettings|null */
+	private $settings;
+
 	/**
-	 * @param JobService         $jobs      Print job service.
-	 * @param EndpointRepository $endpoints Document routes.
+	 * @param JobService               $jobs      Print job service.
+	 * @param EndpointRepository       $endpoints Document routes.
+	 * @param IntegrationSettings|null $settings  Integration settings, used to apply the post-print shipment status.
 	 */
-	public function __construct( JobService $jobs, EndpointRepository $endpoints ) {
+	public function __construct( JobService $jobs, EndpointRepository $endpoints, IntegrationSettings $settings = null ) {
 		$this->jobs      = $jobs;
 		$this->endpoints = $endpoints;
+		$this->settings  = $settings;
 	}
 
 	/**
@@ -38,6 +44,57 @@ final class GermanizedDocuments {
 	 */
 	public function test_order( $order_id ) {
 		return $this->submit_order( $order_id, true );
+	}
+
+	/**
+	 * Document route keys that are configured but do not yet have a readable document.
+	 *
+	 * Used to wait until every routed document for an order (invoice, packing slips,
+	 * shipping labels) exists before printing any of them, since Germanized and
+	 * Shiptastic can take time after the order event to finish generating them.
+	 *
+	 * @param int $order_id WooCommerce order ID.
+	 * @return string[]
+	 */
+	public function missing_documents( $order_id ) {
+		$order = wc_get_order( $order_id );
+		if ( ! $order instanceof \WC_Order ) {
+			return array( 'order' );
+		}
+
+		$missing = array();
+
+		if ( '' !== $this->endpoints->route_endpoint_id( 'invoice' ) && ! $this->find_invoice( $order ) ) {
+			$missing[] = 'invoice';
+		}
+
+		if ( '' !== $this->endpoints->route_endpoint_id( 'packing_slip' ) && ! $this->has_any_packing_slip( $order ) ) {
+			$missing[] = 'packing_slip';
+		}
+
+		return array_merge( $missing, ( new Shiptastic( $this->jobs, $this->endpoints, $this->settings ) )->missing_label_routes( $order ) );
+	}
+
+	/**
+	 * @param \WC_Order $order WooCommerce order.
+	 * @return bool
+	 */
+	private function has_any_packing_slip( \WC_Order $order ) {
+		if ( ! function_exists( 'wc_stc_get_shipments_by_order' ) ) {
+			return false;
+		}
+
+		foreach ( (array) wc_stc_get_shipments_by_order( $order ) as $shipment ) {
+			if ( ! is_object( $shipment ) || ! is_callable( array( $shipment, 'get_attachment' ) ) ) {
+				continue;
+			}
+
+			if ( '' !== $this->object_path( $shipment->get_attachment( 'packing_slip' ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -174,7 +231,7 @@ final class GermanizedDocuments {
 			return;
 		}
 
-		$label_results = ( new Shiptastic( $this->jobs, $this->endpoints ) )->submit_order_labels( $order->get_id(), $force );
+		$label_results = ( new Shiptastic( $this->jobs, $this->endpoints, $this->settings ) )->submit_order_labels( $order->get_id(), $force );
 		if ( is_wp_error( $label_results ) ) {
 			$results[] = $label_results;
 			return;
