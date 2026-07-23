@@ -3,7 +3,7 @@ Contributors: sayehava
 Tags: printing, woocommerce, endpoint, receipt, pridge
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -49,6 +49,27 @@ When Shiptastic for WooCommerce is active, each active carrier appears as a sepa
 route. Pridge forwards the original label payload when Shiptastic creates it.
 
 == Changelog ==
+
+= 1.0.1 =
+
+* Fixed: a genuinely new release could stay invisible for hours because the update
+  checker always read its own cached result, even when WordPress had just recalculated
+  its own update data (on its schedule, or via "Check Again" on the Updates screen). The
+  checker now bypasses its cache whenever WordPress itself is doing a forced check.
+* Fixed: installing (or self-updating) from GitHub's auto-generated "Source code" zip put
+  the plugin in a folder named after the version or a commit hash, so every release
+  installed as a brand new plugin instead of updating the existing one. Releases now
+  include a pridge-wp-endpoint.zip asset whose folder name never changes, and the update
+  checker prefers it.
+* Fixed: an admin.css bug where a hovered/highlighted option in any dropdown rendered
+  dark text on a dark background and was unreadable. Also fixed several selectors left
+  over from before Integrations and Endpoints & Routing were merged into the Settings
+  page, which had silently lost their layout treatment (content padding, hidden footer,
+  notice width) on that page.
+* Removed the "Check for updates now" button, which only cleared an internal cache and
+  required navigating to the Plugins page to see any effect, and replaced it with
+  "Backup now" - creates a manual backup on demand, independent of any pending update.
+* Added a Delete button for each entry in the backups list.
 
 = 1.0.0 =
 
