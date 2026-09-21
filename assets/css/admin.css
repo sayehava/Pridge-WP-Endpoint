@@ -1,13 +1,13 @@
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpcontent {
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive, .pridge_page_pridge-wp-manual) #wpcontent {
 	padding-left: 0;
 	background: #05060c;
 }
 
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpbody-content {
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive, .pridge_page_pridge-wp-manual) #wpbody-content {
 	padding-bottom: 0;
 }
 
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpfooter {
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive, .pridge_page_pridge-wp-manual) #wpfooter {
 	display: none;
 }
 
@@ -1147,8 +1147,8 @@ body.pridge-modal-active {
 	overflow: hidden;
 }
 
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) > .notice,
-body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpbody-content > .notice {
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive, .pridge_page_pridge-wp-manual) > .notice,
+body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive, .pridge_page_pridge-wp-manual) #wpbody-content > .notice {
 	width: min(1180px, calc(100% - 80px));
 	margin: 18px auto 0;
 	border-color: rgba(34, 211, 238, 0.42);
@@ -1177,7 +1177,7 @@ body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pri
 }
 
 @media (max-width: 782px) {
-	body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive) #wpcontent {
+	body:is(.toplevel_page_pridge-wp-endpoint, .pridge_page_pridge-wp-settings, .pridge_page_pridge-wp-archive, .pridge_page_pridge-wp-manual) #wpcontent {
 		padding-left: 0;
 	}
 
