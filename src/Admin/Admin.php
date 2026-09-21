@@ -210,6 +210,29 @@ final class Admin {
 				),
 			)
 		);
+
+		add_action( 'admin_print_footer_scripts', array( $this, 'print_script_fallback' ), 99999 );
+	}
+
+	/**
+	 * Loads admin.js by hand when the regular footer output did not run
+	 * it. Some sites strip, defer or rewrite enqueued footer scripts,
+	 * which left every modal and button on the Pridge screens dead with
+	 * no error. This runs after the normal footer scripts and does
+	 * nothing when admin.js already executed (admin.js sets
+	 * window.__pridgeAdminInit).
+	 *
+	 * @return void
+	 */
+	public function print_script_fallback() {
+		$data = wp_scripts()->get_data( 'pridge-wp-admin', 'data' );
+		$src  = add_query_arg( 'ver', PRIDGE_WP_VERSION, PRIDGE_WP_URL . 'assets/js/admin.js' );
+
+		printf(
+			'<script id="pridge-wp-admin-fallback">if(!window.__pridgeAdminInit){%1$s;var s=document.createElement("script");s.src=%2$s;document.body.appendChild(s);}</script>',
+			is_string( $data ) ? $data : '',
+			wp_json_encode( esc_url_raw( $src ) )
+		);
 	}
 
 	/**
