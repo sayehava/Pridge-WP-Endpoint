@@ -1,6 +1,13 @@
 ( function () {
 	'use strict';
 
+	// Set so the footer fallback loader (Admin::print_script_fallback)
+	// knows this script already ran and must not load it a second time.
+	if ( window.__pridgeAdminInit ) {
+		return;
+	}
+	window.__pridgeAdminInit = true;
+
 	const root = document.querySelector( '[data-pridge-admin]' );
 	if ( ! root ) {
 		return;
