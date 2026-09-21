@@ -24,6 +24,7 @@ final class Admin {
 	public const PAGE_OVERVIEW = 'pridge-wp-endpoint';
 	public const PAGE_SETTINGS = 'pridge-wp-settings';
 	public const PAGE_ARCHIVE  = 'pridge-wp-archive';
+	public const PAGE_MANUAL   = 'pridge-wp-manual';
 
 	/** Settings page sub-tab keys, in display order. */
 	public const SETTINGS_TABS = array( 'general', 'integrations', 'endpoints' );
@@ -90,6 +91,7 @@ final class Admin {
 				'toplevel_page_' . self::PAGE_OVERVIEW,
 				'pridge_page_' . self::PAGE_SETTINGS,
 				'pridge_page_' . self::PAGE_ARCHIVE,
+				'pridge_page_' . self::PAGE_MANUAL,
 			)
 		);
 		$isolation->register();
@@ -116,6 +118,14 @@ final class Admin {
 			'manage_options',
 			self::PAGE_OVERVIEW,
 			array( $this, 'render_overview' )
+		);
+		$this->hook_suffixes[] = add_submenu_page(
+			self::PAGE_OVERVIEW,
+			__( 'Manual Print', 'pridge-wp-endpoint' ),
+			__( 'Manual Print', 'pridge-wp-endpoint' ),
+			'manage_options',
+			self::PAGE_MANUAL,
+			array( $this, 'render_manual' )
 		);
 		$this->hook_suffixes[] = add_submenu_page(
 			self::PAGE_OVERVIEW,
@@ -266,6 +276,28 @@ final class Admin {
 	}
 
 	/**
+	 * Manual Print page: the default-endpoint and Germanized PDF test forms.
+	 *
+	 * @return void
+	 */
+	public function render_manual() {
+		$this->authorize();
+		$is_configured      = $this->settings->is_configured();
+		$germanized_enabled = $this->integration_settings->get( 'germanized_enabled', false ) && Germanized::is_available();
+		$test_orders        = $germanized_enabled && function_exists( 'wc_get_orders' )
+			? wc_get_orders(
+				array(
+					'limit'   => 50,
+					'orderby' => 'date',
+					'order'   => 'DESC',
+					'return'  => 'objects',
+				)
+			)
+			: array();
+		require PRIDGE_WP_DIR . 'views/manual-print.php';
+	}
+
+	/**
 	 * Single Settings page with sub-tabs; every configuration form on the plugin lives here.
 	 *
 	 * @return void
@@ -369,7 +401,7 @@ final class Admin {
 		);
 
 		$args = array(
-			'page'      => self::PAGE_OVERVIEW,
+			'page'      => self::PAGE_MANUAL,
 			'pb_notice' => is_wp_error( $result ) ? 'test-error' : 'test-success',
 		);
 		if ( is_wp_error( $result ) ) {
@@ -438,7 +470,7 @@ final class Admin {
 	 */
 	private function redirect_germanized_test( $order_id, $sent_count, $failed_count, $error_code = '' ) {
 		$args = array(
-			'page'         => self::PAGE_OVERVIEW,
+			'page'         => self::PAGE_MANUAL,
 			'pb_notice'    => 0 < $sent_count ? 'germanized-test-success' : 'germanized-test-error',
 			'order_id'     => absint( $order_id ),
 			'sent_count'   => absint( $sent_count ),
