@@ -3,7 +3,7 @@ Contributors: sayehava
 Tags: printing, woocommerce, endpoint, receipt, pridge
 Requires at least: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.3
+Stable tag: 1.1.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -49,6 +49,21 @@ When Shiptastic for WooCommerce is active, each active carrier appears as a sepa
 route. Pridge forwards the original label payload when Shiptastic creates it.
 
 == Changelog ==
+
+= 1.1.0 =
+
+* New: a Manual Print tab. The default endpoint test and the Germanized PDF test are now
+  two cards on their own tab, with their forms shown directly on the page instead of in
+  pop-up dialogs. They keep working even when another plugin blocks the admin script.
+* Changed: the Diagnostics box on the Overview page was removed, its actions moved to the
+  Manual Print tab. Test results now show up on that tab.
+* Fixed: on sites where another plugin strips or defers enqueued footer scripts, buttons
+  that depend on the admin script did nothing and showed no error. The script is now loaded
+  by a footer fallback whenever it did not run.
+* Fixed: the Manual Print page uses the same dark styling and page width as the other
+  Pridge screens.
+* Fixed: a single order with an unexpected object type or a failing order-number filter can
+  no longer break the Germanized order list.
 
 = 1.0.3 =
 
