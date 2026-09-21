@@ -53,15 +53,26 @@ require PRIDGE_WP_DIR . 'views/partials/admin-header.php';
 					<option value=""><?php esc_html_e( 'Select a recent order', 'pridge-wp-endpoint' ); ?></option>
 					<?php foreach ( $test_orders as $test_order ) : ?>
 						<?php
-						$customer_name = trim( $test_order->get_billing_first_name() . ' ' . $test_order->get_billing_last_name() );
-						$customer_name = $customer_name ?: __( 'Guest', 'pridge-wp-endpoint' );
-						$order_label   = sprintf(
-							/* translators: 1: order number, 2: customer name, 3: order status. */
-							__( '#%1$s — %2$s — %3$s', 'pridge-wp-endpoint' ),
-							$test_order->get_order_number(),
-							$customer_name,
-							wc_get_order_status_name( $test_order->get_status() )
-						);
+						// Refunds and other order-like objects have no billing getters; skip them.
+						if ( ! $test_order instanceof \WC_Order ) {
+							continue;
+						}
+
+						// A third-party filter on order numbers or names must not take the whole page down.
+						try {
+							$customer_name = trim( $test_order->get_billing_first_name() . ' ' . $test_order->get_billing_last_name() );
+							$customer_name = $customer_name ?: __( 'Guest', 'pridge-wp-endpoint' );
+							$order_label   = sprintf(
+								/* translators: 1: order number, 2: customer name, 3: order status. */
+								__( '#%1$s — %2$s — %3$s', 'pridge-wp-endpoint' ),
+								$test_order->get_order_number(),
+								$customer_name,
+								wc_get_order_status_name( $test_order->get_status() )
+							);
+						} catch ( \Throwable $label_error ) {
+							error_log( 'Pridge Manual Print: could not build the label for order ' . $test_order->get_id() . ': ' . $label_error->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+							$order_label = '#' . $test_order->get_id();
+						}
 						?>
 						<option value="<?php echo esc_attr( $test_order->get_id() ); ?>"><?php echo esc_html( $order_label ); ?></option>
 					<?php endforeach; ?>
