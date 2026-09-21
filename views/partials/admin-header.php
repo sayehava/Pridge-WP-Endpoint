@@ -27,6 +27,7 @@ $notice = isset( $_GET['pb_notice'] ) ? sanitize_key( wp_unslash( $_GET['pb_noti
 		<?php
 		$tabs = array(
 			'overview' => array( \Pridge\Admin\Admin::PAGE_OVERVIEW, __( 'Overview', 'pridge-wp-endpoint' ) ),
+			'manual'   => array( \Pridge\Admin\Admin::PAGE_MANUAL, __( 'Manual Print', 'pridge-wp-endpoint' ) ),
 			'settings' => array( \Pridge\Admin\Admin::PAGE_SETTINGS, __( 'Settings', 'pridge-wp-endpoint' ) ),
 			'archive'  => array( \Pridge\Admin\Admin::PAGE_ARCHIVE, __( 'Print Archive', 'pridge-wp-endpoint' ) ),
 		);
