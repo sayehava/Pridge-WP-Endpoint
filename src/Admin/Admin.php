@@ -262,16 +262,6 @@ final class Admin {
 		$cron_healthy          = Cron::is_healthy( $cron_interval_minutes );
 		$pending_count         = Cron::pending_count();
 		$attention_orders      = Cron::orders_needing_attention();
-		$test_orders           = $germanized_enabled && function_exists( 'wc_get_orders' )
-			? wc_get_orders(
-				array(
-					'limit'   => 50,
-					'orderby' => 'date',
-					'order'   => 'DESC',
-					'return'  => 'objects',
-				)
-			)
-			: array();
 		require PRIDGE_WP_DIR . 'views/overview.php';
 	}
 
