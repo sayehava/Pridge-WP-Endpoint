@@ -27,18 +27,6 @@ require PRIDGE_WP_DIR . 'views/partials/admin-header.php';
 	<article class="pridge-stat-card"><span><?php esc_html_e( 'Endpoints', 'pridge-wp-endpoint' ); ?></span><strong><?php echo esc_html( count( $endpoints ) ); ?></strong><small><?php esc_html_e( 'Named printer destinations', 'pridge-wp-endpoint' ); ?></small></article>
 	<article class="pridge-stat-card"><span><?php esc_html_e( 'Archived jobs', 'pridge-wp-endpoint' ); ?></span><strong><?php echo esc_html( $archive_count ); ?></strong><small><?php esc_html_e( 'Successful and failed attempts', 'pridge-wp-endpoint' ); ?></small></article>
 </div>
-<div class="pridge-settings-form">
-	<section class="pridge-panel is-visible">
-		<div class="pridge-panel-heading"><div><span class="pridge-kicker"><?php esc_html_e( 'Diagnostics', 'pridge-wp-endpoint' ); ?></span><h2><?php esc_html_e( 'Test printing', 'pridge-wp-endpoint' ); ?></h2><p><?php esc_html_e( 'Send a real job without waiting for an order event.', 'pridge-wp-endpoint' ); ?></p></div>
-			<div class="pridge-button-row">
-				<button class="button pridge-button is-secondary" type="button" data-pridge-modal-open="pridge-test-modal" <?php disabled( ! $is_configured ); ?>><?php esc_html_e( 'Test default endpoint', 'pridge-wp-endpoint' ); ?></button>
-				<?php if ( $germanized_enabled ) : ?>
-					<button class="button pridge-button is-secondary" type="button" data-pridge-modal-open="pridge-germanized-test-modal" <?php disabled( empty( $test_orders ) ); ?>><?php esc_html_e( 'Test Germanized PDFs', 'pridge-wp-endpoint' ); ?></button>
-				<?php endif; ?>
-			</div>
-		</div>
-	</section>
-</div>
 <?php if ( $germanized_enabled ) : ?>
 <div class="pridge-settings-form">
 	<section class="pridge-panel is-visible" data-pridge-cron-monitor data-last-run="<?php echo esc_attr( $cron_last_run ); ?>">
@@ -92,44 +80,6 @@ require PRIDGE_WP_DIR . 'views/partials/admin-header.php';
 			</div>
 		<?php endif; ?>
 	</section>
-</div>
-<?php endif; ?>
-<div class="pridge-modal" id="pridge-test-modal" role="dialog" aria-modal="true" aria-labelledby="pridge-test-title" hidden><div class="pridge-modal-backdrop" data-pridge-modal-close></div><div class="pridge-modal-card" role="document"><button class="pridge-modal-close" type="button" aria-label="<?php esc_attr_e( 'Close', 'pridge-wp-endpoint' ); ?>" data-pridge-modal-close>&times;</button><span class="pridge-kicker"><?php esc_html_e( 'Live endpoint check', 'pridge-wp-endpoint' ); ?></span><h2 id="pridge-test-title"><?php esc_html_e( 'Send a test print?', 'pridge-wp-endpoint' ); ?></h2><p><?php esc_html_e( 'This creates a real job on the default endpoint.', 'pridge-wp-endpoint' ); ?></p><form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post"><input type="hidden" name="action" value="pridge_wp_test_print"><?php wp_nonce_field( 'pridge_wp_test_print' ); ?><div class="pridge-modal-actions"><button class="button pridge-button is-secondary" type="button" data-pridge-modal-close><?php esc_html_e( 'Cancel', 'pridge-wp-endpoint' ); ?></button><button class="button pridge-button is-primary" type="submit"><?php esc_html_e( 'Send test job', 'pridge-wp-endpoint' ); ?></button></div></form></div></div>
-<?php if ( $germanized_enabled ) : ?>
-<div class="pridge-modal" id="pridge-germanized-test-modal" role="dialog" aria-modal="true" aria-labelledby="pridge-germanized-test-title" hidden>
-	<div class="pridge-modal-backdrop" data-pridge-modal-close></div>
-	<div class="pridge-modal-card" role="document">
-		<button class="pridge-modal-close" type="button" aria-label="<?php esc_attr_e( 'Close', 'pridge-wp-endpoint' ); ?>" data-pridge-modal-close>&times;</button>
-		<span class="pridge-kicker"><?php esc_html_e( 'Germanized document test', 'pridge-wp-endpoint' ); ?></span>
-		<h2 id="pridge-germanized-test-title"><?php esc_html_e( 'Print existing order PDFs', 'pridge-wp-endpoint' ); ?></h2>
-		<p><?php esc_html_e( 'This fetches the selected order’s existing Germanized invoice PDF, packing-slip PDFs, and routed Shiptastic label PDFs. Unassigned or missing documents are not generated.', 'pridge-wp-endpoint' ); ?></p>
-		<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
-			<input type="hidden" name="action" value="pridge_wp_test_germanized_order">
-			<?php wp_nonce_field( 'pridge_wp_test_germanized_order' ); ?>
-			<label class="pridge-field">
-				<span><?php esc_html_e( 'WooCommerce order', 'pridge-wp-endpoint' ); ?></span>
-				<select name="order_id" required>
-					<option value=""><?php esc_html_e( 'Select a recent order', 'pridge-wp-endpoint' ); ?></option>
-					<?php foreach ( $test_orders as $test_order ) : ?>
-						<?php
-						$customer_name = trim( $test_order->get_billing_first_name() . ' ' . $test_order->get_billing_last_name() );
-						$customer_name = $customer_name ?: __( 'Guest', 'pridge-wp-endpoint' );
-						$order_label   = sprintf(
-							/* translators: 1: order number, 2: customer name, 3: order status. */
-							__( '#%1$s — %2$s — %3$s', 'pridge-wp-endpoint' ),
-							$test_order->get_order_number(),
-							$customer_name,
-							wc_get_order_status_name( $test_order->get_status() )
-						);
-						?>
-						<option value="<?php echo esc_attr( $test_order->get_id() ); ?>"><?php echo esc_html( $order_label ); ?></option>
-					<?php endforeach; ?>
-				</select>
-				<small><?php esc_html_e( 'The 50 most recent orders are available.', 'pridge-wp-endpoint' ); ?></small>
-			</label>
-			<div class="pridge-modal-actions"><button class="button pridge-button is-secondary" type="button" data-pridge-modal-close><?php esc_html_e( 'Cancel', 'pridge-wp-endpoint' ); ?></button><button class="button pridge-button is-primary" type="submit"><?php esc_html_e( 'Send existing PDFs', 'pridge-wp-endpoint' ); ?></button></div>
-		</form>
-	</div>
 </div>
 <?php endif; ?>
 <div class="pridge-settings-form">
