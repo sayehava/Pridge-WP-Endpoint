@@ -14,7 +14,6 @@
  * @var bool                 $cron_healthy
  * @var int                  $pending_count
  * @var \WC_Order[]          $attention_orders
- * @var \WC_Order[]          $test_orders
  */
 defined( 'ABSPATH' ) || exit;
 $active_page      = 'overview';
