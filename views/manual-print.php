@@ -14,6 +14,7 @@ $page_title       = __( 'Manual Print', 'pridge-wp-endpoint' );
 $page_description = __( 'Send a real job without waiting for an order event.', 'pridge-wp-endpoint' );
 require PRIDGE_WP_DIR . 'views/partials/admin-header.php';
 ?>
+<div class="pridge-settings-form">
 <div class="pridge-fields-grid">
 	<section class="pridge-panel is-visible">
 		<div class="pridge-panel-heading">
@@ -73,5 +74,6 @@ require PRIDGE_WP_DIR . 'views/partials/admin-header.php';
 		</form>
 	</section>
 	<?php endif; ?>
+</div>
 </div>
 <?php require PRIDGE_WP_DIR . 'views/partials/admin-footer.php'; ?>
